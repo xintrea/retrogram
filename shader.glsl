@@ -23,13 +23,14 @@ void main(void)
 	uv=uv-vec2(uvSideFieldWidth, 0);
 
   // Virtual horizontal line
-  float lineTotal=640.0;
+  int lineTotal=320;
 
   vec4 color=vec4(0.0, 0.0, 0.0, 1.0);
 
-  float p=(sin(fGlobalTime)+1)/2;
+  // Translate uv.y to screenY from 0 to lineTotal
+  int screenY=int( uv.y*float(lineTotal) );
 
-  if(uv.x>p && uv.x<p+0.1 && uv.y>p && uv.y<p+0.1)
+  if(screenY%2==0)
   {
   	color=vec4(0.8, 0.8, 1.0, 1.0);
   }
