@@ -13,6 +13,21 @@ uniform sampler2D texPreviousFrame; // screenshot of the previous frame
 layout(location = 0) out vec4 out_color; // out_color must be written in order to see anything
 
 
+highp float rand(float seed)
+{
+    float shift=texture( texFFT, seed ).r;
+
+    vec2 co=vec2(fGlobalTime+shift, fGlobalTime-shift);
+    
+    highp float a = 12.9898;
+    highp float b = 78.233;
+    highp float c = 43758.5453;
+    highp float dt= dot(co.xy ,vec2(a,b));
+    highp float sn= mod(dt,3.14);
+    return fract(sin(sn) * c);
+}
+
+
 void main(void)
 {
   // Translate XY coordinats to UV coordinats
@@ -23,7 +38,7 @@ void main(void)
 	uv=uv-vec2(uvSideFieldWidth, 0);
 
   // Virtual horizontal line
-  int lineTotal=320;
+  int lineTotal=100;
 
   vec4 color=vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -32,7 +47,10 @@ void main(void)
 
   if(screenY%2==0)
   {
-  	color=vec4(0.8, 0.8, 1.0, 1.0);
+    if(rand( (uv.x*uv.y) )> 0.5)
+    {
+  		color=vec4(0.8, 0.8, 1.0, 1.0);
+  	}
   }
 
 	out_color = color;
