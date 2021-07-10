@@ -49,9 +49,9 @@ float floatConstruct( uint m ) {
 
 // Pseudo-random value in half-open range [0:1].
 float rand( float x ) { return floatConstruct(hash(floatBitsToUint(x+fGlobalTime))); }
-float rand( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
-float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
-float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v))); }
+float rand( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
+float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
+float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
 
 
 void main(void)
@@ -64,7 +64,8 @@ void main(void)
 	uv=uv-vec2(uvSideFieldWidth, 0);
 
   // Virtual horizontal line
-  int lineTotal=100;
+  int lineTotalMaximum=640;
+  int lineTotal=int((sin(fGlobalTime)/2+0.5)*lineTotalMaximum);
 
   vec4 color=vec4(0.0, 0.0, 0.0, 1.0);
 
