@@ -54,15 +54,22 @@ float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime
 float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
 
 
+float circleshape(vec2 position, float radius){
+  return step(radius, length(position - vec2(0.5)));
+}
+
+
 void main(void)
 {
   // Translate XY coordinats to UV coordinats
-	vec2 uv = vec2(gl_FragCoord.x / v2Resolution.x, gl_FragCoord.y / v2Resolution.y);
-	uv /= vec2(v2Resolution.y / v2Resolution.x, 1);
+	vec2 uvPosition = vec2(gl_FragCoord.x / v2Resolution.x, gl_FragCoord.y / v2Resolution.y);
+	uvPosition /= vec2(v2Resolution.y / v2Resolution.x, 1);
   float sideFieldWidth=(v2Resolution.x-v2Resolution.y)/2; // Width in pixel
   float uvSideFieldWidth=(v2Resolution.y+sideFieldWidth)/v2Resolution.y-1;
-	uv=uv-vec2(uvSideFieldWidth, 0);
+	uvPosition=uvPosition-vec2(uvSideFieldWidth, 0);
 
+
+  /*
   // Virtual horizontal line
   int lineTotalMaximum=640;
   int lineTotal=int((sin(fGlobalTime)/2+0.5)*lineTotalMaximum);
@@ -79,6 +86,21 @@ void main(void)
   		color=vec4(0.8, 0.8, 1.0, 1.0);
   	}
   }
+  */
 
-	out_color = color;
+
+  vec2 position = uvPosition; // gl_FragCoord.xy / v2Resolution;
+
+  vec3 color = vec3(0.0);
+
+  float circle = circleshape(position, 0.25);
+
+  circle *= circleshape(position+0.12, 0.3);
+  
+  circle *= circleshape(position-0.1, 0.2);
+
+
+  color = vec3(circle);
+
+  gl_FragColor = vec4(color, 1.0);
 }
