@@ -13,6 +13,8 @@ uniform sampler2D texPreviousFrame; // screenshot of the previous frame
 layout(location = 0) out vec4 out_color; // out_color must be written in order to see anything
 
 
+// const int MAXSAMPLES=4;
+
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint hash( uint x ) {
     x += ( x << 10u );
@@ -23,14 +25,10 @@ uint hash( uint x ) {
     return x;
 }
 
-
-
 // Compound versions of the hashing algorithm I whipped together.
 uint hash( uvec2 v ) { return hash( v.x ^ hash(v.y)                         ); }
 uint hash( uvec3 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z)             ); }
 uint hash( uvec4 v ) { return hash( v.x ^ hash(v.y) ^ hash(v.z) ^ hash(v.w) ); }
-
-
 
 // Construct a float with half-open range [0:1] using low 23 bits.
 // All zeroes yields 0.0, all ones yields the next smallest representable value below 1.0.
@@ -45,8 +43,6 @@ float floatConstruct( uint m ) {
     return f - 1.0;                        // Range [0:1]
 }
 
-
-
 // Pseudo-random value in half-open range [0:1].
 float rand( float x ) { return floatConstruct(hash(floatBitsToUint(x+fGlobalTime))); }
 float rand( vec2  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
@@ -59,6 +55,34 @@ float circleshape(vec2 position, float radius){
 }
 
 
+vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift)
+{
+  // Small mix random by coordinats
+  position.x=position.x+sin(rand(position.x*position.y))/500.0;
+  position.y=position.y+cos(rand(position.x/position.y))/500.0;
+  
+  vec2 center=vec2(0.5);
+  float len1=length(position - center);
+
+  if(len1>maxRadius)
+  {
+   	return vec4(0.0, 0.0, 0.0, 0.0); // Transparent color
+  }
+
+  float c1=sin(len1/waveLen);
+  
+  float len2=length(position + focusShift - center);
+  float c2=sin(len2/waveLen);
+  
+  float c=(c1+c2)/4.0-0.2;
+
+  // Small mix random by color
+  // c=c-0.1+rand(position.x*position.y)/10;
+  
+  return vec4(c, c, c, 1.0);
+}
+
+
 void main(void)
 {
   // Translate XY coordinats to UV coordinats
@@ -68,39 +92,28 @@ void main(void)
   float uvSideFieldWidth=(v2Resolution.y+sideFieldWidth)/v2Resolution.y-1;
 	uvPosition=uvPosition-vec2(uvSideFieldWidth, 0);
 
-
-  /*
-  // Virtual horizontal line
-  int lineTotalMaximum=640;
-  int lineTotal=int((sin(fGlobalTime)/2+0.5)*lineTotalMaximum);
-
-  vec4 color=vec4(0.0, 0.0, 0.0, 1.0);
-
-  // Translate uv.y to screenY from 0 to lineTotal
-  int screenY=int( uv.y*float(lineTotal) );
-
-  if(screenY%2==0)
-  {
-    if(rand( (uv.x*uv.y) )> 0.5)
-    {
-  		color=vec4(0.8, 0.8, 1.0, 1.0);
-  	}
-  }
-  */
-
-
-  vec2 position = uvPosition; // gl_FragCoord.xy / v2Resolution;
-
-  vec3 color = vec3(0.0);
-
-  float circle = circleshape(position, 0.25);
-
-  circle *= circleshape(position+0.12, 0.3);
   
-  circle *= circleshape(position-0.1, 0.2);
+  // float polarX=sin(uvPosition.x/uvPosition.y+fGlobalTime)/2.0;
+  // float polarY=cos(uvPosition.x/uvPosition.y+fGlobalTime)/2.0;
+  // uvPosition=vec2(polarX, polarY);
+  
+  
+  vec2 focusShift=vec2( sin(fGlobalTime)/650+1.0/650.0*4, 0.001);
+   
+  int maxNum=3;
+  float pi=3.1415926535897932384626433832795;
+  vec4 acc = vec4(vec3(0.0), 1.0);
+  for (int num = 0; num < maxNum; num++)
+  {
+    vec2 randVec=vec2(sin(rand(num))/1000.0, sin(rand(num*num))/1000.0);
+    // vec2 randVec = 0.45*vec2(sin(2*pi*num/maxNum), cos(2*pi*num/maxNum));
+    // vec2 randVec=vec2(0.0);
+    
+    acc += wavePlate(uvPosition+randVec, 0.4, 0.00061, focusShift);
+  }
 
+  gl_FragColor = vec4(acc.rgb * (1.0 / float(maxNum)), 1.0);
 
-  color = vec3(circle);
-
-  gl_FragColor = vec4(color, 1.0);
+  
+  // gl_FragColor = wavePlate(uvPosition, 0.4, 0.0007, focusShift);
 }
