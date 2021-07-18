@@ -55,13 +55,22 @@ float circleshape(vec2 position, float radius){
 }
 
 
-vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift)
+vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift, float angle)
 {
+  // Center of plate and rotate center
+  vec2 center=vec2(0.5);
+
+  // Rotate
+  float sinAngle=sin(angle);
+  float cosAngle=cos(angle);
+  float rotPosX=position.x*cosAngle - position.y*cosAngle;
+  float rotPosY=position.x*cosAngle + position.y*cosAngle;
+
+
   // Small mix random by coordinats
   position.x=position.x+sin(rand(position.x*position.y))/500.0;
   position.y=position.y+cos(rand(position.x/position.y))/500.0;
   
-  vec2 center=vec2(0.5);
   float len1=length(position - center);
 
   if(len1>maxRadius)
@@ -74,7 +83,7 @@ vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift)
   float len2=length(position + focusShift - center);
   float c2=sin(len2/waveLen);
   
-  float c=(c1+c2)/4.0-0.2;
+  float c=(c1+c2)/4.0-0.1; // Sybstract for saturation control, best diapason  0.1...0.2
 
   // Small mix random by color
   // c=c-0.1+rand(position.x*position.y)/10;
@@ -105,11 +114,8 @@ void main(void)
   vec4 acc = vec4(vec3(0.0), 1.0);
   for (int num = 0; num < maxNum; num++)
   {
-    vec2 randVec=vec2(sin(rand(num))/1000.0, sin(rand(num*num))/1000.0);
-    // vec2 randVec = 0.45*vec2(sin(2*pi*num/maxNum), cos(2*pi*num/maxNum));
-    // vec2 randVec=vec2(0.0);
-    
-    acc += wavePlate(uvPosition+randVec, 0.4, 0.00061, focusShift);
+    vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
+    acc += wavePlate(uvPosition, 0.4, 0.00061, focusShift, fGlobalTime); // todo: Try adding randVec to uvPosition
   }
 
   gl_FragColor = vec4(acc.rgb * (1.0 / float(maxNum)), 1.0);
