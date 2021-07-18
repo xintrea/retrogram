@@ -92,12 +92,14 @@ vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift, f
   vec2 center=vec2(0.5);
 
   // Rotate
-  float sinAngle=sin(angle);
-  float cosAngle=cos(angle);
-  float rotPosX=position.x*cosAngle - position.y*sinAngle;
-  float rotPosY=position.x*sinAngle + position.y*cosAngle;
+  mat4 matPlateRotate=inverse( get2DTranslateMatrix(center.x, center.y) )*
+                      get2DRotateMatrix(fGlobalTime)*
+                      get2DTranslateMatrix(center.x, center.y);
 
-	position=vec2(rotPosX, rotPosY);
+  vec4 afterRotatePos=vec4(position.x, position.y, 0, 0);
+  afterRotatePos=matPlateRotate*afterRotatePos;
+
+	position=vec2(afterRotatePos.x, afterRotatePos.y);
 
   // Small mix random by coordinats
   position.x=position.x+sin(rand(position.x*position.y))/500.0;
