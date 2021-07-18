@@ -77,7 +77,7 @@ mat4 get2DRotateMatrix(float a)
 	result[0][0]=cosA;
 	result[0][1]=sinA;
 	result[1][0]=-sinA;
-	result[1][1]=-cosA;
+	result[1][1]=cosA;
 	return result;
 }
 
@@ -92,11 +92,12 @@ vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift, f
   vec2 center=vec2(0.5);
 
   // Rotate
-  mat4 matPlateRotate=inverse( get2DTranslateMatrix(center.x, center.y) )*
+  mat4 matPlateRotate=get2DTranslateMatrix(center.x, center.y)*
                       get2DRotateMatrix(fGlobalTime)*
-                      get2DTranslateMatrix(center.x, center.y);
+                      inverse(get2DScaleMatrix(1, 0.5))*
+                      inverse(get2DTranslateMatrix(center.x, center.y));
 
-  vec4 afterRotatePos=vec4(position.x, position.y, 0, 0);
+  vec4 afterRotatePos=vec4(position.x, position.y, 0, 1);
   afterRotatePos=matPlateRotate*afterRotatePos;
 
 	position=vec2(afterRotatePos.x, afterRotatePos.y);
@@ -148,8 +149,9 @@ void main(void)
   vec4 acc = vec4(vec3(0.0), 1.0);
   for (int num = 0; num < maxNum; num++)
   {
-    vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
-    acc += wavePlate(uvPosition, 0.4, 0.00061, focusShift, fGlobalTime); // todo: Try adding randVec to uvPosition
+    // todo: Try adding randVec to uvPosition
+    // vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
+    acc += wavePlate(uvPosition, 0.4, 0.00061, focusShift, fGlobalTime);
   }
 
   gl_FragColor = vec4(acc.rgb * (1.0 / float(maxNum)), 1.0);
