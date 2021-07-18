@@ -50,6 +50,37 @@ float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime
 float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
 
 
+const mat4 identityMatrix=mat4(vec4(1,0,0,0), vec4(0,1,0,0), vec4(0,0,1,0), vec4(0,0,0,1));
+
+mat4 get2DTranslateMatrix(float x, float y)
+{
+	mat4 result=identityMatrix;
+	result[3][0]=x;
+	result[3][1]=y;
+	return result;
+}
+
+mat4 get2DScaleMatrix(float x, float y)
+{
+	mat4 result=identityMatrix;
+	result[0][0]=x;
+	result[1][1]=y;
+	return result;
+}
+
+mat4 get2DRotateMatrix(float a)
+{
+	mat4 result=identityMatrix;
+	float sinA=sin(a);
+	float cosA=cos(a);
+	
+	result[0][0]=cosA;
+	result[0][1]=sinA;
+	result[1][0]=-sinA;
+	result[1][1]=-cosA;
+	return result;
+}
+
 float circleshape(vec2 position, float radius){
   return step(radius, length(position - vec2(0.5)));
 }
@@ -63,9 +94,10 @@ vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift, f
   // Rotate
   float sinAngle=sin(angle);
   float cosAngle=cos(angle);
-  float rotPosX=position.x*cosAngle - position.y*cosAngle;
-  float rotPosY=position.x*cosAngle + position.y*cosAngle;
+  float rotPosX=position.x*cosAngle - position.y*sinAngle;
+  float rotPosY=position.x*sinAngle + position.y*cosAngle;
 
+	position=vec2(rotPosX, rotPosY);
 
   // Small mix random by coordinats
   position.x=position.x+sin(rand(position.x*position.y))/500.0;
