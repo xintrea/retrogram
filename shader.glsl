@@ -9,9 +9,14 @@ uniform sampler1D texFFTSmoothed;// this one has longer falloff and less harsh t
 uniform sampler1D texFFTIntegrated;// this is continually increasing
 uniform sampler2D texPreviousFrame;// screenshot of the previous frame
 
-layout(location=0)out vec4 out_color;// out_color must be written in order to see anything
+uniform sampler2D textureGrammophonePlate;
+
 
 const float PI=3.1415926535897932384626433832795;
+
+const int   RAY_MARCH_MAX_STEPS=100;
+const float RAY_MARCH_MAX_DIST=100.0;
+const float RAY_MARCH_SURF_DIST=0.001;
 
 // const int MAXSAMPLES=4;
 
@@ -91,6 +96,71 @@ mat4 get2DRotateMatrix(float a)
 }
 
 
+// -------------
+// SDF 3D figure
+// -------------
+
+float sdCylinder(vec3 p, float r, float height) 
+{
+    // Cylinder standing upright on the xz plane
+	float d = length(p.xz) - r;
+	d = max(d, abs(p.y) - height);
+	return d;
+}
+
+
+// -------------------
+// Ray march functions
+// -------------------
+
+float GetDist(vec3 p) 
+{
+    float d = sdCylinder(p, 2.0, 0.1); // float d = sdBox(p, vec3(1));
+    
+    return d;
+}
+
+
+float RayMarch(vec3 ro, vec3 rd) {
+	float dO=0.;
+    
+    for(int i=0; i<RAY_MARCH_MAX_STEPS; i++) 
+    {
+    	vec3 p = ro + rd*dO;
+        float dS = GetDist(p);
+        dO += dS;
+        if(dO>RAY_MARCH_MAX_DIST || abs(dS)<RAY_MARCH_SURF_DIST)
+        {
+            break;
+        }
+    }
+    
+    return dO;
+}
+
+vec3 GetNormal(vec3 p) {
+	float d = GetDist(p);
+    vec2 e = vec2(.001, 0);
+    
+    vec3 n = d - vec3(
+        GetDist(p-e.xyy),
+        GetDist(p-e.yxy),
+        GetDist(p-e.yyx));
+    
+    return normalize(n);
+}
+
+vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
+    vec3 f = normalize(l-p),
+        r = normalize(cross(vec3(0,1,0), f)),
+        u = cross(f,r),
+        c = f*z,
+        i = c + uv.x*r + uv.y*u,
+        d = normalize(i);
+    return d;
+}
+
+
 // ------------------
 // Wave plate drawing
 // ------------------
@@ -152,6 +222,50 @@ vec4 layerWavePlate(vec2 uvPixelPosition)
 }
 
 
+// -----------------
+// Grammophone plate
+// -----------------
+
+vec4 layerGrammophomePlate(vec2 uvPixelPosition)
+{
+    vec3 ro = vec3(0, 3, -3);
+    ro = ( get2DRotateMatrix(fGlobalTime)*vec4(ro, 1.0) ).xyz;
+
+    vec3 rd = GetRayDir(uvPixelPosition, ro, vec3(0.0), 1.0);
+    vec3 color = vec3(0);
+   
+    float d = RayMarch(ro, rd);
+
+    if(d < RAY_MARCH_MAX_DIST) 
+    {
+        vec3 p = ro + rd * d;
+        vec3 normal = GetNormal(p);
+        // vec3 reflect = reflect(rd, normal); // For reflect support
+
+        float dif = dot(normal, normalize(vec3(1,2,3)))*.5+.5;
+        color = vec3(dif);
+        
+        // Texturing plate, it detect by normal (0, 1, 0)
+        vec2 uvPixelAtTexture=vec2(0.0);
+        if( distance(abs(normal), vec3(0.0, 1.0, 0.0)) < 0.001 )
+        {
+            uvPixelAtTexture=vec2( sin(p.z), cos(p.x) );
+        }
+        else // Texturing round
+        {
+            uvPixelAtTexture=vec2( atan(p.z, p.x), p.y );
+        }
+        
+        color*=texture2D(textureGrammophonePlate, uvPixelAtTexture).rgb;
+        
+    }
+    
+    color = pow(color, vec3(0.4545)); // Gamma correction
+    
+    return vec4(color, 1.0);
+}
+
+
 void main(void)
 {
     // Translate XY coordinats to UV coordinats
@@ -162,9 +276,14 @@ void main(void)
     uvPixelPosition=uvPixelPosition-vec2(uvSideFieldWidth, 0.0);
     
     // Pixel color
-    vec4 color=vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 color  = vec4(vec3(0.0), 1.0);
+    vec4 color1 = vec4(vec3(0.0), 1.0);
+    vec4 color2 = vec4(vec3(0.0), 1.0);
 
-    color=layerWavePlate(uvPixelPosition);
+    color1=layerGrammophomePlate(uvPixelPosition);
+    color2=layerWavePlate(uvPixelPosition);
     
+    color=color1*color2;
+
     gl_FragColor=color;
 }

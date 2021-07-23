@@ -5,5 +5,8 @@
     "height":720,
     "fullscreen":false,
   },
+  "textures": {
+  	"textureGrammophonePlate": "textures/grammophonePlate.jpg"
+  }
   "postExitCmd":"./postExitCmd.sh"
 }
