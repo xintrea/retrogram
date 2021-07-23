@@ -15,6 +15,10 @@ layout(location = 0) out vec4 out_color; // out_color must be written in order t
 
 // const int MAXSAMPLES=4;
 
+// ----------------
+// Random generator
+// ----------------
+
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint hash( uint x ) {
     x += ( x << 10u );
@@ -50,6 +54,10 @@ float rand( vec3  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime
 float rand( vec4  v ) { return floatConstruct(hash(floatBitsToUint(v+fGlobalTime))); }
 
 
+// -----------------------
+// Basic 2D transformation
+// -----------------------
+
 const mat4 identityMatrix=mat4(vec4(1,0,0,0), vec4(0,1,0,0), vec4(0,0,1,0), vec4(0,0,0,1));
 
 mat4 get2DTranslateMatrix(float x, float y)
@@ -79,10 +87,6 @@ mat4 get2DRotateMatrix(float a)
 	result[1][0]=-sinA;
 	result[1][1]=cosA;
 	return result;
-}
-
-float circleshape(vec2 position, float radius){
-  return step(radius, length(position - vec2(0.5)));
 }
 
 
@@ -124,6 +128,24 @@ vec4 wavePlate(vec2 position, float maxRadius, float waveLen, vec2 focusShift, f
   // c=c-0.1+rand(position.x*position.y)/10;
   
   return vec4(c, c, c, 1.0);
+}
+
+
+float sdTorus( vec3 p, vec2 t ) {
+    vec2 q = vec2(length(p.xy)-t.x,p.z);
+    return length(q)-t.y;
+}
+
+float sdSphere(vec3 p, float r) {
+	return length(p) - r;
+}
+
+float scene( vec3 p ) {
+    float rt = sdTorus(p, vec2(1.0, 0.5) );
+    
+    vec3 ps = p - vec3( sin(fGlobalTime) * 0.6 , 0., 0.5);
+    float rs = sdSphere(ps, 0.9);
+    return min(rt, rs);
 }
 
 
