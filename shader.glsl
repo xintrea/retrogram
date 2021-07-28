@@ -104,7 +104,8 @@ float sdCylinder(vec3 p, float r, float height)
 {
     // Cylinder standing upright on the xz plane
 	float d = length(p.xz) - r;
-	d = max(d, abs(p.y) - height);
+	d = max(d, clamp( abs(p.y) - height, 0, height )); // max( d, abs(p.y) - height )
+
 	return d;
 }
 
@@ -115,7 +116,7 @@ float sdCylinder(vec3 p, float r, float height)
 
 float GetDist(vec3 p) 
 {
-    float d = sdCylinder(p, 2.0, 0.1); // float d = sdBox(p, vec3(1));
+    float d = sdCylinder(p, 1.0, 0.05); // float d = sdBox(p, vec3(1));
     
     return d;
 }
@@ -158,6 +159,18 @@ vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
         i = c + uv.x*r + uv.y*u,
         d = normalize(i);
     return d;
+}
+
+
+// Calculate camera direction normalize vector
+// ro - ray origin, point in 3D space of camera position
+// target - point in 3D space of camera view to
+// uv - current pixel coordinates
+vec3 cameraDirection (vec3 ro, vec3 target, vec2 uv) {
+    vec3 f = normalize(target-ro);
+    vec3 l = normalize(cross(vec3(0.,1.,0.),f));
+    vec3 u = normalize(cross(f,l));
+    return normalize(f + l*uv.x + u*uv.y);
 }
 
 
@@ -226,12 +239,28 @@ vec4 layerWavePlate(vec2 uvPixelPosition)
 // Grammophone plate
 // -----------------
 
-vec4 layerGrammophomePlate(vec2 uvPixelPosition)
-{
-    vec3 ro = vec3(0, 3, -3);
-    ro = ( get2DRotateMatrix(fGlobalTime)*vec4(ro, 1.0) ).xyz;
+mat2 simpleRot(float a) {
+    float s=sin(a), c=cos(a);
+    return mat2(c, -s, s, c);
+}
 
-    vec3 rd = GetRayDir(uvPixelPosition, ro, vec3(0.0), 1.0);
+vec4 layerGrammophonePlate(vec2 uvPixelPosition)
+{
+    uvPixelPosition+=vec2(-0.1, -0.2);
+
+    float rCamRotate=2.5;
+    float hCam=0.5;
+
+    float x=sin(-fGlobalTime)*rCamRotate;
+    float y=hCam;
+    float z=cos(-fGlobalTime)*rCamRotate;
+
+    vec3 ro = vec3(x, y, z);
+
+    // ro.xz *= simpleRot(fGlobalTime); // ro = ( get2DRotateMatrix(fGlobalTime)*vec4(ro, 1.0) ).xyz;
+    // vec3 rd = GetRayDir(uvPixelPosition, ro, vec3(0.0), 1.0);
+
+    vec3 rd=cameraDirection(ro, vec3(0.), uvPixelPosition);
     vec3 color = vec3(0);
    
     float d = RayMarch(ro, rd);
@@ -242,8 +271,10 @@ vec4 layerGrammophomePlate(vec2 uvPixelPosition)
         vec3 normal = GetNormal(p);
         // vec3 reflect = reflect(rd, normal); // For reflect support
 
-        float dif = dot(normal, normalize(vec3(1,2,3)))*.5+.5;
-        color = vec3(dif);
+        // Start color for current point
+        // float dif = dot(normal, normalize(vec3(1,2,3)))*.5+.5;
+        // color = vec3(dif);
+        color = vec3(0.5); // Start color for current point
         
         // Texturing plate, it detect by normal (0, 1, 0)
         vec2 uvPixelAtTexture=vec2(0.0);
@@ -253,9 +284,10 @@ vec4 layerGrammophomePlate(vec2 uvPixelPosition)
         }
         else // Texturing round
         {
-            uvPixelAtTexture=vec2( atan(p.z, p.x), p.y );
+            uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 ); // atan(p.z, p.x), p.y
         }
         
+        // Mix texture color
         color*=texture2D(textureGrammophonePlate, uvPixelAtTexture).rgb;
         
     }
@@ -280,10 +312,10 @@ void main(void)
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
 
-    color1=layerGrammophomePlate(uvPixelPosition);
+    color1=layerGrammophonePlate(uvPixelPosition);
     color2=layerWavePlate(uvPixelPosition);
     
-    color=color1*color2;
+    color=color1+color2;
 
     gl_FragColor=color;
 }
