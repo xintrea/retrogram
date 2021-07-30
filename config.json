@@ -9,7 +9,11 @@
 
   "textures": {
   	"textureGrammophonePlate": "textures/grammophonePlate.jpg"
-  }
+  },
 
-  "postExitCmd":"./postExitCmd.sh"
+  "gui": {
+    "showEditorAtStart": false
+  },
+
+  "postExitCmd": "./postExitCmd.sh"
 }
