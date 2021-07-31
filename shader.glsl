@@ -102,11 +102,17 @@ mat4 get2DRotateMatrix(float a)
 
 float sdCylinder(vec3 p, float r, float height) 
 {
-    // Cylinder standing upright on the xz plane
-	float d = length(p.xz) - r;
-	d = max(d, clamp( abs(p.y) - height, 0, height )); // max( d, abs(p.y) - height )
+    // Distance to point in xz plane
+	float distanceXZ = length(p.xz) - r;
 
-	return d;
+    // Distance to point in Y axis
+    float distanceY = p.y - height; // Optimisation. By defaul calculate distance for area from heigth to +inf
+    if(p.y < 0.0) // For area from 0 to -inf
+    {
+        distanceY = -p.y;
+    }
+
+	return max(distanceXZ, distanceY);
 }
 
 
