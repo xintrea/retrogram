@@ -18,7 +18,15 @@ const int   RAY_MARCH_MAX_STEPS=100;
 const float RAY_MARCH_MAX_DIST=100.0;
 const float RAY_MARCH_SURF_DIST=0.001;
 
-// const int MAXSAMPLES=4;
+struct CylinderType
+{
+    float r;
+    float height;
+};
+
+const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.05 );
+
+
 
 
 // ----------------
@@ -122,9 +130,9 @@ float sdCylinder(vec3 p, float r, float height)
 
 float GetDist(vec3 p) 
 {
-    float d = sdCylinder(p, 1.0, 0.05); // float d = sdBox(p, vec3(1));
+    float distance = sdCylinder(p, objectGrammophonePlate.r, objectGrammophonePlate.height);
     
-    return d;
+    return distance;
 }
 
 
@@ -286,7 +294,7 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
         vec2 uvPixelAtTexture=vec2(0.0);
         if( distance(abs(normal), vec3(0.0, 1.0, 0.0)) < 0.001 )
         {
-            uvPixelAtTexture=vec2( sin(p.z), cos(p.x) );
+            uvPixelAtTexture=vec2( objectGrammophonePlate.r+p.z/objectGrammophonePlate.r/2.0, objectGrammophonePlate.r+p.x/objectGrammophonePlate.r/2.0 );
         }
         else // Texturing round
         {
