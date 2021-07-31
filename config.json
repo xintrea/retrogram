@@ -8,7 +8,8 @@
   },
 
   "textures": {
-  	"textureGrammophonePlate": "textures/grammophonePlate.jpg"
+  	"textureGrammophonePlate": "textures/grammophonePlate.jpg",
+  	"textureSkinBlack": "textures/skinBlack.jpg",
   },
 
   "gui": {

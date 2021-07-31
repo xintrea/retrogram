@@ -10,6 +10,7 @@ uniform sampler1D texFFTIntegrated;// this is continually increasing
 uniform sampler2D texPreviousFrame;// screenshot of the previous frame
 
 uniform sampler2D textureGrammophonePlate;
+uniform sampler2D textureSkinBlack;
 
 
 const float PI=3.1415926535897932384626433832795;
@@ -22,9 +23,10 @@ struct CylinderType
 {
     float r;
     float height;
+    float chamfer;
 };
 
-const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.05 );
+const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.05, 0.01 );
 
 
 
@@ -108,19 +110,23 @@ mat4 get2DRotateMatrix(float a)
 // SDF 3D figure
 // -------------
 
-float sdCylinder(vec3 p, float r, float height) 
+float sdCylinder(vec3 p, float r, float height, float chamfer) 
 {
+    // todo: chamfer not using, try add support chamfer
+
     // Distance to point in xz plane
 	float distanceXZ = length(p.xz) - r;
 
     // Distance to point in Y axis
     float distanceY = p.y - height; // Optimisation. By defaul calculate distance for area from heigth to +inf
+
     if(p.y < 0.0) // For area from 0 to -inf
     {
         distanceY = -p.y;
     }
 
-	return max(distanceXZ, distanceY);
+    return max(distanceXZ, distanceY);
+
 }
 
 
@@ -130,7 +136,10 @@ float sdCylinder(vec3 p, float r, float height)
 
 float GetDist(vec3 p) 
 {
-    float distance = sdCylinder(p, objectGrammophonePlate.r, objectGrammophonePlate.height);
+    float distance = sdCylinder(p, 
+                                objectGrammophonePlate.r, 
+                                objectGrammophonePlate.height, 
+                                objectGrammophonePlate.chamfer);
     
     return distance;
 }
@@ -260,8 +269,10 @@ mat2 simpleRot(float a) {
 
 vec4 layerGrammophonePlate(vec2 uvPixelPosition)
 {
+    // Shift screen position
     uvPixelPosition+=vec2(-0.1, -0.2);
 
+    // Rotate camera around (0,0,0)
     float rCamRotate=2.5;
     float hCam=0.5;
 
@@ -271,11 +282,13 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
 
     vec3 ro = vec3(x, y, z);
 
+
     // ro.xz *= simpleRot(fGlobalTime); // ro = ( get2DRotateMatrix(fGlobalTime)*vec4(ro, 1.0) ).xyz;
     // vec3 rd = GetRayDir(uvPixelPosition, ro, vec3(0.0), 1.0);
 
     vec3 rd=cameraDirection(ro, vec3(0.), uvPixelPosition);
     vec3 color = vec3(0);
+    vec3 textureColor = vec3(0);
    
     float d = RayMarch(ro, rd);
 
@@ -290,19 +303,25 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
         // color = vec3(dif);
         color = vec3(0.5); // Start color for current point
         
+
         // Texturing plate, it detect by normal (0, 1, 0)
         vec2 uvPixelAtTexture=vec2(0.0);
         if( distance(abs(normal), vec3(0.0, 1.0, 0.0)) < 0.001 )
         {
-            uvPixelAtTexture=vec2( objectGrammophonePlate.r+p.z/objectGrammophonePlate.r/2.0, objectGrammophonePlate.r+p.x/objectGrammophonePlate.r/2.0 );
+            // uvPixelAtTexture=vec2( objectGrammophonePlate.r+p.z/objectGrammophonePlate.r/2.0, objectGrammophonePlate.r+p.x/objectGrammophonePlate.r/2.0 );
+            uvPixelAtTexture=vec2( (p.z/objectGrammophonePlate.r-1)/2.0, (p.x/objectGrammophonePlate.r-1)/2.0 );
+            textureColor=texture2D(textureSkinBlack, uvPixelAtTexture).rgb;
+
         }
         else // Texturing round
         {
-            uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 ); // atan(p.z, p.x), p.y
+            // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
+            uvPixelAtTexture=vec2( atan(p.x, p.z), p.y );
+            textureColor=texture2D(textureGrammophonePlate, uvPixelAtTexture).rgb;
         }
         
         // Mix texture color
-        color*=texture2D(textureGrammophonePlate, uvPixelAtTexture).rgb;
+        color*=textureColor;
         
     }
     
