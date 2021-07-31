@@ -204,12 +204,15 @@ vec3 cameraDirection (vec3 ro, vec3 target, vec2 uv) {
 vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusShift, float angle)
 {
     // Center of plate and rotate center
-    vec2 center=vec2(.2);
+    vec2 center=vec2(.5, 0.38);
+
+    float scaleX=2.3;
+    float scaleY=0.35;
     
     // Rotate
     mat4 matPlateRotate=get2DTranslateMatrix(center.x, center.y)*
     get2DRotateMatrix(fGlobalTime)*
-    inverse(get2DScaleMatrix(1,.5))*
+    inverse(get2DScaleMatrix(scaleX, scaleY))*
     inverse(get2DTranslateMatrix(center.x, center.y));
     
     vec4 afterRotatePos=vec4(uvPixelPosition.x, uvPixelPosition.y,0,1);
@@ -270,11 +273,11 @@ mat2 simpleRot(float a) {
 vec4 layerGrammophonePlate(vec2 uvPixelPosition)
 {
     // Shift screen position
-    uvPixelPosition+=vec2(-0.1, -0.2);
+    uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=2.5;
-    float hCam=0.5;
+    float rCamRotate=1.4;
+    float hCam=0.22;
 
     float x=sin(-fGlobalTime)*rCamRotate;
     float y=hCam;
@@ -348,7 +351,11 @@ void main(void)
     color1=layerGrammophonePlate(uvPixelPosition);
     color2=layerWavePlate(uvPixelPosition);
     
-    color=color1+color2;
+    color=color1;
+    if(color2.xyz != vec3(0.0) )
+    {
+        color=color2;
+    }
 
     gl_FragColor=color;
 }
