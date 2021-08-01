@@ -29,7 +29,7 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.8, 0.05, 0.0548, 0.01 );
+const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.01 );
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -247,12 +247,13 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     float len2=length(uvPixelPosition+focusShift-center);
     float c2=sin(len2/waveLen);
     
-    float c=(c1+c2)/4.0-0.1; // Sybstract for saturation control, best diapason  0.1...0.2
+    // float c=(c1+c2)/4.0-0.1; // Sybstract for saturation control, best diapason  0.1...0.2
+    float c=(c1+c2)/4+0.05; // Sybstract for saturation control, best diapason  0.1...0.2
     
     // Small mix random by color
     // c=c-0.1+rand(uvPixelPosition.x*uvPixelPosition.y)/10;
     
-    return vec4(c, c, c, 1.0);
+    return vec4( vec3( clamp(0.0, 1.0, c) ), 1.0);
 }
 
 vec4 textureWavePlate(vec2 uvPixelPosition)
@@ -265,7 +266,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
     {
         // todo: Try adding randVec to uvPixelPosition
         // vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
-        acc+=wavePlate(uvPixelPosition, objectWavePlate.r, 0.00061, focusShift, fGlobalTime);
+        acc+=wavePlate(uvPixelPosition, objectWavePlate.r, 0.00085, focusShift, fGlobalTime);
     }
     
     return vec4(acc.rgb*(1.0/float(maxNum)), 1.0);
@@ -293,7 +294,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
     // Ray direction
     vec3 rd=cameraDirection(ro, vec3(0.), uvPixelPosition);
     
-    vec4 color = vec4( vec3(0.5), 1.0 ); // Start color for current point
+    vec4 color = vec4( vec3(0.0), 1.0 ); // Start color for current point
     vec4 textureColor = vec4( 0.0 );
    
     // Get cylinder ray march distance
@@ -337,7 +338,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
             else if( textureRound==TEXTURE_WAVE_ROUND)
             {
-                textureColor=vec4( vec3(0.01), 1.0 ); // Dark color
+                textureColor=vec4( vec3(0.0001), 1.0 ); // Dark color
             }
             else
             {
@@ -346,11 +347,11 @@ vec4 showCylinder(vec2 uvPixelPosition,
         }
         
         // Mix texture color
-        color*=textureColor;
+        color=textureColor;
         
     }
     
-    color = vec4( pow(color.rgb, vec3(0.4545)), color.a); // Gamma correction
+    // color = vec4( pow(color.rgb, vec3(0.5545)), color.a); // Gamma correction
     
     return color;
 }
@@ -370,21 +371,21 @@ void main(void)
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
 
-    // color1=showCylinder(uvPixelPosition, 
-    //                     objectGrammophonePlate,
-    //                     TEXTURE_GRAMMOPHONE_PLATE, 
-    //                     TEXTURE_GRAMMOPHONE_ROUND);
+    color1=showCylinder(uvPixelPosition, 
+                        objectGrammophonePlate,
+                        TEXTURE_GRAMMOPHONE_PLATE, 
+                        TEXTURE_GRAMMOPHONE_ROUND);
 
-    color1=showCylinder(uvPixelPosition,
+    color2=showCylinder(uvPixelPosition,
                         objectWavePlate,
                         TEXTURE_WAVE_PLATE,
                         TEXTURE_WAVE_ROUND);
     
     color=color1;
-    // if(color2.xyz != vec3(0.0) )
-    // {
-    //     color=color2;
-    // }
+    if(color2.xyz != vec3(0.0) )
+    {
+        color=color2;
+    }
 
     gl_FragColor=color;
 }
