@@ -29,7 +29,7 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.8, 0.05, 0.058, 0.01 );
+const CylinderType objectWavePlate=CylinderType( 0.8, 0.05, 0.0548, 0.01 );
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -215,7 +215,7 @@ vec3 cameraDirection (vec3 ro, vec3 target, vec2 uv) {
 vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusShift, float angle)
 {
     // Center of plate and rotate center
-    vec2 center=vec2(.5, 0.5); // vec2(.5, 0.38);
+    vec2 center=vec2(0, 0); // vec2(.5, 0.38);
 
     float scaleX=1.0;
     float scaleY=1.0;
@@ -226,7 +226,7 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     inverse(get2DScaleMatrix(scaleX, scaleY))*
     inverse(get2DTranslateMatrix(center.x, center.y));
     
-    vec4 afterRotatePos=vec4(uvPixelPosition.x, uvPixelPosition.y,0,1);
+    vec4 afterRotatePos=vec4(uvPixelPosition.x, uvPixelPosition.y, 0, 1);
     afterRotatePos=matPlateRotate*afterRotatePos;
     
     uvPixelPosition=vec2(afterRotatePos.x, afterRotatePos.y);
@@ -265,7 +265,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
     {
         // todo: Try adding randVec to uvPixelPosition
         // vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
-        acc+=wavePlate(uvPixelPosition, 0.4, 0.00061, focusShift, fGlobalTime);
+        acc+=wavePlate(uvPixelPosition, objectWavePlate.r, 0.00061, focusShift, fGlobalTime);
     }
     
     return vec4(acc.rgb*(1.0/float(maxNum)), 1.0);
@@ -283,8 +283,8 @@ vec4 showCylinder(vec2 uvPixelPosition,
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=1.4;
-    float hCam=0.22;
+    float rCamRotate=1.4; // 1.4
+    float hCam=0.22; // 0.22
     float x=sin(-fGlobalTime)*rCamRotate;
     float y=hCam;
     float z=cos(-fGlobalTime)*rCamRotate;
@@ -319,8 +319,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
             else if( texturePlate == TEXTURE_WAVE_PLATE )
             {
-                uvPixelAtTexture=vec2( p.z, p.x );
-                textureColor=textureWavePlate(uvPixelAtTexture);
+                textureColor=textureWavePlate( vec2( p.z, p.x ) );
             }
             else
             {
@@ -338,7 +337,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
             else if( textureRound==TEXTURE_WAVE_ROUND)
             {
-                textureColor=vec4( vec3(0.1), 1.0 ); // Dark color
+                textureColor=vec4( vec3(0.01), 1.0 ); // Dark color
             }
             else
             {
