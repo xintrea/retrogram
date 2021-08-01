@@ -215,10 +215,10 @@ vec3 cameraDirection (vec3 ro, vec3 target, vec2 uv) {
 vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusShift, float angle)
 {
     // Center of plate and rotate center
-    vec2 center=vec2(.5, 0.38);
+    vec2 center=vec2(.5, 0.5); // vec2(.5, 0.38);
 
-    float scaleX=2.3;
-    float scaleY=0.35;
+    float scaleX=1.0;
+    float scaleY=1.0;
     
     // Rotate
     mat4 matPlateRotate=get2DTranslateMatrix(center.x, center.y)*
@@ -277,6 +277,8 @@ vec4 showCylinder(vec2 uvPixelPosition,
                   int texturePlate,
                   int textureRound)
 {
+    vec2 baseUvPixelPosition=uvPixelPosition;
+
     // Shift screen position
     uvPixelPosition+=vec2(-0.5, -0.45);
 
@@ -317,6 +319,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
             else if( texturePlate == TEXTURE_WAVE_PLATE )
             {
+                uvPixelAtTexture=vec2( p.z, p.x );
                 textureColor=textureWavePlate(uvPixelAtTexture);
             }
             else
