@@ -29,7 +29,7 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.95, 0.05, 0.058, 0.01 );
+const CylinderType objectWavePlate=CylinderType( 0.8, 0.05, 0.058, 0.01 );
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -131,9 +131,9 @@ float sdCylinder(vec3 p,
     // Distance to point in Y axis
     float distanceY = p.y - topHeight; // Optimisation. By defaul calculate distance for area from topHeight to +inf
 
-    if(p.y < bottomHeight) // For area from 0 to -inf
+    if(p.y < bottomHeight) // For area from bottomHeight to -inf
     {
-        distanceY = -p.y;
+        distanceY = bottomHeight-p.y;
     }
 
     return max(distanceXZ, distanceY);
@@ -368,15 +368,15 @@ void main(void)
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
 
-    color1=showCylinder(uvPixelPosition, 
-                        objectGrammophonePlate,
-                        TEXTURE_GRAMMOPHONE_PLATE, 
-                        TEXTURE_GRAMMOPHONE_ROUND);
+    // color1=showCylinder(uvPixelPosition, 
+    //                     objectGrammophonePlate,
+    //                     TEXTURE_GRAMMOPHONE_PLATE, 
+    //                     TEXTURE_GRAMMOPHONE_ROUND);
 
-    // color2=showCylinder(uvPixelPosition,
-    //                     objectWavePlate,
-    //                     TEXTURE_WAVE_PLATE,
-    //                     TEXTURE_WAVE_ROUND);
+    color1=showCylinder(uvPixelPosition,
+                        objectWavePlate,
+                        TEXTURE_WAVE_PLATE,
+                        TEXTURE_WAVE_ROUND);
     
     color=color1;
     // if(color2.xyz != vec3(0.0) )
