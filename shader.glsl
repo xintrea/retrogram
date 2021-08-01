@@ -22,13 +22,20 @@ const float RAY_MARCH_SURF_DIST=0.001;
 struct CylinderType
 {
     float r;
-    float height;
+    float bottomHeight;
+    float topHeight;
     float chamfer;
 };
 
-const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.05, 0.01 );
+CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
+const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
+const CylinderType objectWavePlate=CylinderType( 0.95, 0.05, 0.058, 0.01 );
 
 
+const int TEXTURE_GRAMMOPHONE_PLATE=1;
+const int TEXTURE_GRAMMOPHONE_ROUND=2;
+const int TEXTURE_WAVE_PLATE=3;
+const int TEXTURE_WAVE_ROUND=4;
 
 
 // ----------------
@@ -110,7 +117,11 @@ mat4 get2DRotateMatrix(float a)
 // SDF 3D figure
 // -------------
 
-float sdCylinder(vec3 p, float r, float height, float chamfer) 
+float sdCylinder(vec3 p, 
+                 float r, 
+                 float bottomHeight, 
+                 float topHeight,
+                 float chamfer) 
 {
     // todo: chamfer not using, try add support chamfer
 
@@ -118,15 +129,14 @@ float sdCylinder(vec3 p, float r, float height, float chamfer)
 	float distanceXZ = length(p.xz) - r;
 
     // Distance to point in Y axis
-    float distanceY = p.y - height; // Optimisation. By defaul calculate distance for area from heigth to +inf
+    float distanceY = p.y - topHeight; // Optimisation. By defaul calculate distance for area from topHeight to +inf
 
-    if(p.y < 0.0) // For area from 0 to -inf
+    if(p.y < bottomHeight) // For area from 0 to -inf
     {
         distanceY = -p.y;
     }
 
     return max(distanceXZ, distanceY);
-
 }
 
 
@@ -137,9 +147,10 @@ float sdCylinder(vec3 p, float r, float height, float chamfer)
 float GetDist(vec3 p) 
 {
     float distance = sdCylinder(p, 
-                                objectGrammophonePlate.r, 
-                                objectGrammophonePlate.height, 
-                                objectGrammophonePlate.chamfer);
+                                cylinderRayMarch.r, 
+                                cylinderRayMarch.bottomHeight, 
+                                cylinderRayMarch.topHeight,
+                                cylinderRayMarch.chamfer);
     
     return distance;
 }
@@ -244,7 +255,7 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     return vec4(c, c, c, 1.0);
 }
 
-vec4 layerWavePlate(vec2 uvPixelPosition)
+vec4 textureWavePlate(vec2 uvPixelPosition)
 {
     vec2 focusShift=vec2(sin(fGlobalTime)/650.0+1.0/650.0*4.0, 0.001);
     
@@ -261,16 +272,10 @@ vec4 layerWavePlate(vec2 uvPixelPosition)
 }
 
 
-// -----------------
-// Grammophone plate
-// -----------------
-
-mat2 simpleRot(float a) {
-    float s=sin(a), c=cos(a);
-    return mat2(c, -s, s, c);
-}
-
-vec4 layerGrammophonePlate(vec2 uvPixelPosition)
+vec4 showCylinder(vec2 uvPixelPosition, 
+                  CylinderType cylinderObject,
+                  int texturePlate,
+                  int textureRound)
 {
     // Shift screen position
     uvPixelPosition+=vec2(-0.5, -0.45);
@@ -278,21 +283,19 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
     // Rotate camera around (0,0,0)
     float rCamRotate=1.4;
     float hCam=0.22;
-
     float x=sin(-fGlobalTime)*rCamRotate;
     float y=hCam;
     float z=cos(-fGlobalTime)*rCamRotate;
-
     vec3 ro = vec3(x, y, z);
 
-
-    // ro.xz *= simpleRot(fGlobalTime); // ro = ( get2DRotateMatrix(fGlobalTime)*vec4(ro, 1.0) ).xyz;
-    // vec3 rd = GetRayDir(uvPixelPosition, ro, vec3(0.0), 1.0);
-
+    // Ray direction
     vec3 rd=cameraDirection(ro, vec3(0.), uvPixelPosition);
-    vec3 color = vec3(0);
-    vec3 textureColor = vec3(0);
+    
+    vec4 color = vec4( vec3(0.5), 1.0 ); // Start color for current point
+    vec4 textureColor = vec4( 0.0 );
    
+    // Get cylinder ray march distance
+    cylinderRayMarch=cylinderObject;
     float d = RayMarch(ro, rd);
 
     if(d < RAY_MARCH_MAX_DIST) 
@@ -301,26 +304,43 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
         vec3 normal = GetNormal(p);
         // vec3 reflect = reflect(rd, normal); // For reflect support
 
-        // Start color for current point
-        // float dif = dot(normal, normalize(vec3(1,2,3)))*.5+.5;
-        // color = vec3(dif);
-        color = vec3(0.5); // Start color for current point
-        
-
         // Texturing plate, it detect by normal (0, 1, 0)
         vec2 uvPixelAtTexture=vec2(0.0);
         if( distance(abs(normal), vec3(0.0, 1.0, 0.0)) < 0.001 )
         {
-            // uvPixelAtTexture=vec2( objectGrammophonePlate.r+p.z/objectGrammophonePlate.r/2.0, objectGrammophonePlate.r+p.x/objectGrammophonePlate.r/2.0 );
-            uvPixelAtTexture=vec2( (p.z/objectGrammophonePlate.r-1)/2.0, (p.x/objectGrammophonePlate.r-1)/2.0 );
-            textureColor=texture2D(textureSkinBlack, uvPixelAtTexture).rgb;
+            // uvPixelAtTexture=vec2( cylinderObject.r+p.z/cylinderObject.r/2.0, cylinderObject.r+p.x/cylinderObject.r/2.0 );
+            uvPixelAtTexture=vec2( (p.z/cylinderObject.r-1)/2.0, (p.x/cylinderObject.r-1)/2.0 );
 
+            if( texturePlate == TEXTURE_GRAMMOPHONE_PLATE )
+            {
+                textureColor=texture2D(textureSkinBlack, uvPixelAtTexture);
+            }
+            else if( texturePlate == TEXTURE_WAVE_PLATE )
+            {
+                textureColor=textureWavePlate(uvPixelAtTexture);
+            }
+            else
+            {
+                textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
+            }
         }
         else // Texturing round
         {
             // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
             uvPixelAtTexture=vec2( atan(p.x, p.z), p.y );
-            textureColor=texture2D(textureGrammophonePlate, uvPixelAtTexture).rgb;
+
+            if( textureRound==TEXTURE_GRAMMOPHONE_ROUND)
+            {
+                textureColor=texture2D(textureGrammophonePlate, uvPixelAtTexture);
+            }
+            else if( textureRound==TEXTURE_WAVE_ROUND)
+            {
+                textureColor=vec4( vec3(0.1), 1.0 ); // Dark color
+            }
+            else
+            {
+                textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
+            }
         }
         
         // Mix texture color
@@ -328,9 +348,9 @@ vec4 layerGrammophonePlate(vec2 uvPixelPosition)
         
     }
     
-    color = pow(color, vec3(0.4545)); // Gamma correction
+    color = vec4( pow(color.rgb, vec3(0.4545)), color.a); // Gamma correction
     
-    return vec4(color, 1.0);
+    return color;
 }
 
 
@@ -348,14 +368,21 @@ void main(void)
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
 
-    color1=layerGrammophonePlate(uvPixelPosition);
-    color2=layerWavePlate(uvPixelPosition);
+    color1=showCylinder(uvPixelPosition, 
+                        objectGrammophonePlate,
+                        TEXTURE_GRAMMOPHONE_PLATE, 
+                        TEXTURE_GRAMMOPHONE_ROUND);
+
+    // color2=showCylinder(uvPixelPosition,
+    //                     objectWavePlate,
+    //                     TEXTURE_WAVE_PLATE,
+    //                     TEXTURE_WAVE_ROUND);
     
     color=color1;
-    if(color2.xyz != vec3(0.0) )
-    {
-        color=color2;
-    }
+    // if(color2.xyz != vec3(0.0) )
+    // {
+    //     color=color2;
+    // }
 
     gl_FragColor=color;
 }
