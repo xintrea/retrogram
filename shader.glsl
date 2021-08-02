@@ -1,5 +1,7 @@
 #version 410 core
 
+out vec4 FragColor;
+                 
 uniform float fGlobalTime;// in seconds
 uniform vec2 v2Resolution;// viewport resolution (in pixels)
 uniform float fFrameTime;// duration of the last frame, in seconds
@@ -365,7 +367,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
             if( texturePlate == TEXTURE_GRAMMOPHONE_PLATE )
             {
-                textureColor=texture2D(textureSkinBlack, uvPixelAtTexture);
+                textureColor=texture(textureSkinBlack, uvPixelAtTexture);
             }
             else if( texturePlate == TEXTURE_WAVE_PLATE )
             {
@@ -383,7 +385,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
             if( textureRound==TEXTURE_GRAMMOPHONE_ROUND)
             {
-                textureColor=texture2D(textureGrammophonePlate, uvPixelAtTexture);
+                textureColor=texture(textureGrammophonePlate, uvPixelAtTexture);
             }
             else if( textureRound==TEXTURE_WAVE_ROUND)
             {
@@ -439,5 +441,5 @@ void main(void)
         color=color2;
     }
 
-    gl_FragColor=color;
+    FragColor=color;
 }
