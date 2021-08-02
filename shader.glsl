@@ -29,7 +29,7 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.01 );
+const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.005 );
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -117,6 +117,29 @@ mat4 get2DRotateMatrix(float a)
 // SDF 3D figure
 // -------------
 
+
+// Cone with correct distances to tip and base circle. Y is up, 0 is in the middle of the base.
+float fCone(vec3 p, float radius, float height) {
+	vec2 q = vec2(length(p.xz), p.y);
+	vec2 tip = q - vec2(0, height);
+	vec2 mantleDir = normalize(vec2(height, radius));
+	float mantle = dot(tip, mantleDir);
+	float d = max(mantle, -q.y);
+	float projected = dot(tip, vec2(mantleDir.y, -mantleDir.x));
+	
+	// distance to tip
+	if ((q.y > height) && (projected < 0)) {
+		d = max(d, length(tip));
+	}
+	
+	// distance to base ring
+	if ((q.x > radius) && (projected > length(vec2(height, radius)))) {
+		d = max(d, length(q - vec2(radius, 0)));
+	}
+	return d;
+}
+
+
 float sdCylinder(vec3 p, 
                  float r, 
                  float bottomHeight, 
@@ -136,7 +159,17 @@ float sdCylinder(vec3 p,
         distanceY = bottomHeight-p.y;
     }
 
-    return max(distanceXZ, distanceY);
+    float cylinderDistance = max(distanceXZ, distanceY);
+    // float cylinderDistance=0;
+
+
+    // Cone for exclude chamfer volume
+    float coneHeight = topHeight+(r-chamfer);
+    float coneR = coneHeight; // 45 degree cone
+    float coneDistance=fCone( p, coneR, coneHeight);
+
+
+    return max(cylinderDistance, coneDistance);
 }
 
 
@@ -184,6 +217,22 @@ vec3 GetNormal(vec3 p) {
     
     return normalize(n);
 }
+
+
+float GetLight(vec3 p)
+{ 
+    // Directional light
+    // vec3 lightPos = vec3(5.*sin(fGlobalTime),5.,5.0*cos(fGlobalTime)); // Light Position
+    vec3 lightPos = vec3(5.,5.,5.); // Light Position
+    vec3 l = normalize(lightPos-p); // Light Vector
+    vec3 n = GetNormal(p); // Normal Vector
+   
+    float dif = dot(n,l); // Diffuse light
+    dif = clamp(dif,0.,1.); // Clamp so it doesnt go below 0
+
+    return dif;
+}
+
 
 vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
     vec3 f = normalize(l-p),
@@ -260,7 +309,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
 {
     vec2 focusShift=vec2(sin(fGlobalTime)/650.0+1.0/650.0*4.0, 0.001);
     
-    int maxNum=3;
+    int maxNum=1;
     vec4 acc=vec4(vec3(0.0), 1.0); // Accumulator
     for(int num=0; num<maxNum; num++)
     {
@@ -284,7 +333,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=1.4; // 1.4
+    float rCamRotate=1.8; // 1.4
     float hCam=0.22; // 0.22
     float x=sin(-fGlobalTime)*rCamRotate;
     float y=hCam;
@@ -346,8 +395,11 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
         }
         
+        
+        vec4 lightColor=vec4( vec3(GetLight(p))/4, 1.0 );
+
         // Mix texture color
-        color=textureColor;
+        color=mix(lightColor, textureColor, 0.5);
         
     }
     
