@@ -31,7 +31,8 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.005 );
+const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.003 );
+const CylinderType objectKingpin=CylinderType( 0.02, 0.0548, 0.09, 0.008 );
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -342,8 +343,10 @@ vec4 showCylinder(vec2 uvPixelPosition,
     float z=cos(-fGlobalTime)*rCamRotate;
     vec3 ro = vec3(x, y, z);
 
+    vec3 camPointTo=vec3(0.0); // vec3(0.0)
+
     // Ray direction
-    vec3 rd=cameraDirection(ro, vec3(0.), uvPixelPosition);
+    vec3 rd=cameraDirection(ro, camPointTo, uvPixelPosition);
     
     vec4 color = vec4( vec3(0.0), 1.0 ); // Start color for current point
     vec4 textureColor = vec4( 0.0 );
@@ -424,6 +427,7 @@ void main(void)
     vec4 color  = vec4(vec3(0.0), 1.0);
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
+    vec4 color3 = vec4(vec3(0.0), 1.0);
 
     color1=showCylinder(uvPixelPosition, 
                         objectGrammophonePlate,
@@ -434,11 +438,20 @@ void main(void)
                         objectWavePlate,
                         TEXTURE_WAVE_PLATE,
                         TEXTURE_WAVE_ROUND);
-    
+
+    color3=showCylinder(uvPixelPosition,
+                        objectKingpin,
+                        TEXTURE_GRAMMOPHONE_PLATE,
+                        TEXTURE_GRAMMOPHONE_ROUND);
+
     color=color1;
     if(color2.xyz != vec3(0.0) )
     {
         color=color2;
+    }
+    if(color3.xyz != vec3(0.0) )
+    {
+        color=color3;
     }
 
     FragColor=color;
