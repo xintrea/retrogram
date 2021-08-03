@@ -13,6 +13,7 @@ uniform sampler2D texPreviousFrame;// screenshot of the previous frame
 
 uniform sampler2D textureGrammophonePlate;
 uniform sampler2D textureSkinBlack;
+uniform sampler2D textureKingpin;
 
 
 const float PI=3.1415926535897932384626433832795;
@@ -32,13 +33,14 @@ struct CylinderType
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
 const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.003 );
-const CylinderType objectKingpin=CylinderType( 0.02, 0.0548, 0.09, 0.008 );
+const CylinderType objectKingpin=CylinderType( 0.5, 0.0548, 0.09, 0.008 ); // ( 0.02, 0.0548, 0.09, 0.008 )
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
 const int TEXTURE_GRAMMOPHONE_ROUND=2;
 const int TEXTURE_WAVE_PLATE=3;
 const int TEXTURE_WAVE_ROUND=4;
+const int TEXTURE_KINGPIN=5;
 
 
 // ----------------
@@ -113,6 +115,29 @@ mat4 get2DRotateMatrix(float a)
     result[1][0]=-sinA;
     result[1][1]=cosA;
     return result;
+}
+
+
+float getAngle(float x, float y)
+{
+    float alpha=atan( abs(y/x) );
+
+    if(x>=0 && y>=0)
+    {
+        return alpha;
+    }
+
+    if(x<0 && y>=0)
+    {
+        return PI-alpha;
+    }
+
+    if(x<0 && y<0)
+    {
+        return PI+alpha;
+    }
+
+    return 2.0*PI-alpha;
 }
 
 
@@ -336,11 +361,11 @@ vec4 showCylinder(vec2 uvPixelPosition,
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=1.8; // 1.4
-    float hCam=0.22; // 0.22
-    float x=sin(-fGlobalTime)*rCamRotate;
+    float rCamRotate=0.8; // 1.4
+    float hCam=2.22; // 0.22
+    float x=sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
-    float z=cos(-fGlobalTime)*rCamRotate;
+    float z=cos(-fGlobalTime*0.5)*rCamRotate;
     vec3 ro = vec3(x, y, z);
 
     vec3 camPointTo=vec3(0.0); // vec3(0.0)
@@ -376,6 +401,10 @@ vec4 showCylinder(vec2 uvPixelPosition,
             {
                 textureColor=textureWavePlate( vec2( p.z, p.x ) );
             }
+            else if( texturePlate == TEXTURE_KINGPIN )
+            {
+                textureColor=texture(textureKingpin, uvPixelAtTexture);
+            }
             else
             {
                 textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
@@ -384,20 +413,42 @@ vec4 showCylinder(vec2 uvPixelPosition,
         else // Texturing round
         {
             // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
-            uvPixelAtTexture=vec2( atan(p.x, p.z), p.y );
 
-            if( textureRound==TEXTURE_GRAMMOPHONE_ROUND)
+            float angle=getAngle(p.z, p.x)/(2*PI);
+
+            uvPixelAtTexture=vec2( angle, p.y ); // vec2( atan(p.x/p.z), p.y)
+
+            if( textureRound == TEXTURE_GRAMMOPHONE_ROUND)
             {
                 textureColor=texture(textureGrammophonePlate, uvPixelAtTexture);
             }
-            else if( textureRound==TEXTURE_WAVE_ROUND)
+            else if( textureRound == TEXTURE_WAVE_ROUND)
             {
                 textureColor=vec4( vec3(0.0001), 1.0 ); // Dark color
+            }
+            else if( texturePlate == TEXTURE_KINGPIN )
+            {
+                textureColor=texture(textureKingpin, uvPixelAtTexture);
             }
             else
             {
                 textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
             }
+
+            if(angle>=0 && angle<0.01)
+            {
+                textureColor=vec4( 0.0, 0.0, 1.0, 1.0 );
+            }
+
+            if(angle>=(sin(fGlobalTime/4)/2.0+0.5) && angle<(sin(fGlobalTime/4)/2.0+0.5)+0.01)
+            {
+                textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
+            }
+
+            // if(angle>=0.1 && angle<=1.0)
+            // {
+            //     textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
+            // }
         }
         
         
@@ -441,7 +492,7 @@ void main(void)
 
     color3=showCylinder(uvPixelPosition,
                         objectKingpin,
-                        TEXTURE_GRAMMOPHONE_PLATE,
+                        TEXTURE_KINGPIN,
                         TEXTURE_GRAMMOPHONE_ROUND);
 
     color=color1;
