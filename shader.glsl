@@ -361,7 +361,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=0.8; // 1.4
+    float rCamRotate=1.8; // 1.4
     float hCam=2.22; // 0.22
     float x=sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
@@ -379,6 +379,9 @@ vec4 showCylinder(vec2 uvPixelPosition,
     // Get cylinder ray march distance
     cylinderRayMarch=cylinderObject;
     float d = RayMarch(ro, rd);
+
+    float angle=getAngle( (ro + rd * d).z, (ro + rd * d).x)/(2*PI);
+
 
     if(d < RAY_MARCH_MAX_DIST) 
     {
@@ -414,7 +417,9 @@ vec4 showCylinder(vec2 uvPixelPosition,
         {
             // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
 
-            float angle=getAngle(p.z, p.x)/(2*PI);
+            // Here creata angle variable, but temporary create move to top
+            angle=getAngle(p.z, p.x)/(2*PI);
+            
 
             uvPixelAtTexture=vec2( angle, p.y ); // vec2( atan(p.x/p.z), p.y)
 
@@ -435,11 +440,13 @@ vec4 showCylinder(vec2 uvPixelPosition,
                 textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
             }
 
+            // Blue label
             if(angle>=0 && angle<0.01)
             {
                 textureColor=vec4( 0.0, 0.0, 1.0, 1.0 );
             }
 
+            // Libghblue label
             if(angle>=(sin(fGlobalTime/4)/2.0+0.5) && angle<(sin(fGlobalTime/4)/2.0+0.5)+0.01)
             {
                 textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
@@ -450,17 +457,19 @@ vec4 showCylinder(vec2 uvPixelPosition,
             //     textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
             // }
         }
-        
-        
+       
         vec4 lightColor=vec4( vec3(GetLight(p))/4, 1.0 );
 
         // Mix texture color
         color=mix(lightColor, textureColor, 0.5);
-        
     }
     
     // color = vec4( pow(color.rgb, vec3(0.5545)), color.a); // Gamma correction
-    
+   
+    if(baseUvPixelPosition.y>=0.9 && baseUvPixelPosition.y<1.0)
+        if(baseUvPixelPosition.x>=angle && baseUvPixelPosition.x<(angle+0.01))
+            color=vec4( 0.8, 0.8, 0.1, 1.0 );
+
     return color;
 }
 
@@ -485,15 +494,15 @@ void main(void)
                         TEXTURE_GRAMMOPHONE_PLATE, 
                         TEXTURE_GRAMMOPHONE_ROUND);
 
-    color2=showCylinder(uvPixelPosition,
-                        objectWavePlate,
-                        TEXTURE_WAVE_PLATE,
-                        TEXTURE_WAVE_ROUND);
+    // color2=showCylinder(uvPixelPosition,
+    //                     objectWavePlate,
+    //                     TEXTURE_WAVE_PLATE,
+    //                     TEXTURE_WAVE_ROUND);
 
-    color3=showCylinder(uvPixelPosition,
-                        objectKingpin,
-                        TEXTURE_KINGPIN,
-                        TEXTURE_GRAMMOPHONE_ROUND);
+    // color3=showCylinder(uvPixelPosition,
+    //                     objectKingpin,
+    //                     TEXTURE_KINGPIN,
+    //                     TEXTURE_GRAMMOPHONE_ROUND);
 
     color=color1;
     if(color2.xyz != vec3(0.0) )
