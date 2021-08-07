@@ -33,7 +33,7 @@ struct CylinderType
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
 const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.003 );
-const CylinderType objectKingpin=CylinderType( 0.5, 0.0548, 0.09, 0.008 ); // ( 0.02, 0.0548, 0.09, 0.008 )
+const CylinderType objectKingpin=CylinderType( 0.02, 0.0548, 0.09, 0.008 ); // ( 0.02, 0.0548, 0.09, 0.008 )
 
 
 const int TEXTURE_GRAMMOPHONE_PLATE=1;
@@ -355,14 +355,12 @@ vec4 showCylinder(vec2 uvPixelPosition,
                   int texturePlate,
                   int textureRound)
 {
-    vec2 baseUvPixelPosition=uvPixelPosition;
-
     // Shift screen position
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=1.8; // 1.4
-    float hCam=2.22; // 0.22
+    float rCamRotate=1.4; // 1.4
+    float hCam=0.22; // 0.22
     float x=sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
     float z=cos(-fGlobalTime*0.5)*rCamRotate;
@@ -379,9 +377,6 @@ vec4 showCylinder(vec2 uvPixelPosition,
     // Get cylinder ray march distance
     cylinderRayMarch=cylinderObject;
     float d = RayMarch(ro, rd);
-
-    float angle=getAngle( (ro + rd * d).z, (ro + rd * d).x)/(2*PI);
-
 
     if(d < RAY_MARCH_MAX_DIST) 
     {
@@ -417,9 +412,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
         {
             // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
 
-            // Here creata angle variable, but temporary create move to top
-            angle=getAngle(p.z, p.x)/(2*PI);
-            
+            float angle=getAngle(p.z, p.x)/(2.0*PI);
 
             uvPixelAtTexture=vec2( angle, p.y ); // vec2( atan(p.x/p.z), p.y)
 
@@ -440,17 +433,17 @@ vec4 showCylinder(vec2 uvPixelPosition,
                 textureColor=vec4( 0.0, 0.0, 1.0, 1.0 ); // Debug color
             }
 
-            // Blue label
-            if(angle>=0 && angle<0.01)
-            {
-                textureColor=vec4( 0.0, 0.0, 1.0, 1.0 );
-            }
+            // // Blue label
+            // if(angle>=0 && angle<0.01)
+            // {
+            //     textureColor=vec4( 0.0, 0.0, 1.0, 1.0 );
+            // }
 
-            // Libghblue label
-            if(angle>=(sin(fGlobalTime/4)/2.0+0.5) && angle<(sin(fGlobalTime/4)/2.0+0.5)+0.01)
-            {
-                textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
-            }
+            // // Lighthblue label
+            // if(angle>=(sin(fGlobalTime/4)/2.0+0.5) && angle<(sin(fGlobalTime/4)/2.0+0.5)+0.01)
+            // {
+            //     textureColor=vec4( 0.5, 0.8, 1.0, 1.0 );
+            // }
 
             // if(angle>=0.1 && angle<=1.0)
             // {
@@ -460,15 +453,11 @@ vec4 showCylinder(vec2 uvPixelPosition,
        
         vec4 lightColor=vec4( vec3(GetLight(p))/4, 1.0 );
 
-        // Mix texture color
+        // // Mix texture color
         color=mix(lightColor, textureColor, 0.5);
     }
     
     // color = vec4( pow(color.rgb, vec3(0.5545)), color.a); // Gamma correction
-   
-    if(baseUvPixelPosition.y>=0.9 && baseUvPixelPosition.y<1.0)
-        if(baseUvPixelPosition.x>=angle && baseUvPixelPosition.x<(angle+0.01))
-            color=vec4( 0.8, 0.8, 0.1, 1.0 );
 
     return color;
 }
@@ -494,15 +483,15 @@ void main(void)
                         TEXTURE_GRAMMOPHONE_PLATE, 
                         TEXTURE_GRAMMOPHONE_ROUND);
 
-    // color2=showCylinder(uvPixelPosition,
-    //                     objectWavePlate,
-    //                     TEXTURE_WAVE_PLATE,
-    //                     TEXTURE_WAVE_ROUND);
+    color2=showCylinder(uvPixelPosition,
+                        objectWavePlate,
+                        TEXTURE_WAVE_PLATE,
+                        TEXTURE_WAVE_ROUND);
 
-    // color3=showCylinder(uvPixelPosition,
-    //                     objectKingpin,
-    //                     TEXTURE_KINGPIN,
-    //                     TEXTURE_GRAMMOPHONE_ROUND);
+    color3=showCylinder(uvPixelPosition,
+                        objectKingpin,
+                        TEXTURE_KINGPIN,
+                        TEXTURE_KINGPIN);
 
     color=color1;
     if(color2.xyz != vec3(0.0) )
