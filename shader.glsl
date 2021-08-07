@@ -15,6 +15,7 @@ uniform sampler2D textureGrammophonePlate;
 uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
+uniform sampler2D textureLabel;
 
 
 const float PI=3.1415926535897932384626433832795;
@@ -336,6 +337,7 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
 
 vec4 textureWavePlate(vec2 uvPixelPosition)
 {
+    // Wave form
     vec2 focusShift=vec2(sin(fGlobalTime)/650.0+1.0/650.0*4.0, 0.001);
     
     int maxNum=1;
@@ -346,8 +348,19 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
         // vec2 randVec=vec2(sin(rand(fGlobalTime+num))/1000.0, sin(rand(fGlobalTime+num*num))/1000.0);
         acc+=wavePlate(uvPixelPosition, objectWavePlate.r, 0.00085, focusShift, fGlobalTime);
     }
+    acc=vec4(acc.rgb*(1.0/float(maxNum)), 1.0);
+
+
+    // Label
+    mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(1.4, 1.4);
+    vec2 uv = ( transformMat * vec4(uvPixelPosition.x, uvPixelPosition.y, 0.0, 1.0) ).xy;
+    vec4 textureColor=vec4(vec3(0.0), 0.0);
+    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
+    {
+        textureColor = texture(textureLabel, vec2(uv.x, uv.y) );
+    }
     
-    return vec4(acc.rgb*(1.0/float(maxNum)), 1.0);
+    return mix(textureColor, acc, 0.0);
 }
 
 
