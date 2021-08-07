@@ -14,6 +14,7 @@ uniform sampler2D texPreviousFrame;// screenshot of the previous frame
 uniform sampler2D textureGrammophonePlate;
 uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
+uniform sampler2D textureHead;
 
 
 const float PI=3.1415926535897932384626433832795;
@@ -350,6 +351,29 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
 }
 
 
+vec4 showHead(vec2 uvPixelPosition)
+{
+    float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
+    float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
+
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.005)/2.0;
+    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.009)/2.0;
+
+    mat4 transformMat = get2DScaleMatrix(1.9, 1.9) * get2DTranslateMatrix(-0.6+shiftX, 0.85+shiftY);
+
+    vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
+
+    vec4 textureColor=vec4(0.0);
+
+    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
+    {
+        textureColor = texture(textureHead, vec2(uv.x, uv.y) );
+    }
+
+    return textureColor;
+}
+
+
 vec4 showCylinder(vec2 uvPixelPosition, 
                   CylinderType cylinderObject,
                   int texturePlate,
@@ -477,6 +501,7 @@ void main(void)
     vec4 color1 = vec4(vec3(0.0), 1.0);
     vec4 color2 = vec4(vec3(0.0), 1.0);
     vec4 color3 = vec4(vec3(0.0), 1.0);
+    vec4 color4 = vec4(vec3(0.0), 1.0);
 
     color1=showCylinder(uvPixelPosition, 
                         objectGrammophonePlate,
@@ -493,6 +518,8 @@ void main(void)
                         TEXTURE_KINGPIN,
                         TEXTURE_KINGPIN);
 
+    color4=showHead(uvPixelPosition);
+
     color=color1;
     if(color2.xyz != vec3(0.0) )
     {
@@ -501,6 +528,10 @@ void main(void)
     if(color3.xyz != vec3(0.0) )
     {
         color=color3;
+    }
+    if(color4.xyz != vec3(0.0) )
+    {
+        color=color4;
     }
 
     FragColor=color;
