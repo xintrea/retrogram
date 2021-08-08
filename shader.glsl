@@ -398,9 +398,9 @@ vec4 showCylinder(vec2 uvPixelPosition,
     // Rotate camera around (0,0,0)
     float rCamRotate=1.4; // 1.4
     float hCam=0.22; // 0.22
-    float x=sin(-fGlobalTime*0.5)*rCamRotate;
+    float x=sin(1.0*0.5)*rCamRotate; // Dynamic camera: sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
-    float z=cos(-fGlobalTime*0.5)*rCamRotate;
+    float z=cos(1.0*0.5)*rCamRotate; // Dynamic camera: cos(-fGlobalTime*0.5)*rCamRotate;
     vec3 ro = vec3(x, y, z);
 
     vec3 camPointTo=vec3(0.0); // vec3(0.0)
@@ -421,12 +421,16 @@ vec4 showCylinder(vec2 uvPixelPosition,
         vec3 normal = GetNormal(p);
         // vec3 reflect = reflect(rd, normal); // For reflect support
 
+        float angleByTime=fGlobalTime*0.065;
+
         // Texturing plate, it detect by normal (0, 1, 0)
         vec2 uvPixelAtTexture=vec2(0.0);
         if( distance(abs(normal), vec3(0.0, 1.0, 0.0)) < 0.001 )
         {
-            // uvPixelAtTexture=vec2( cylinderObject.r+p.z/cylinderObject.r/2.0, cylinderObject.r+p.x/cylinderObject.r/2.0 );
-            uvPixelAtTexture=vec2( (p.z/cylinderObject.r-1)/2.0, (p.x/cylinderObject.r-1)/2.0 );
+            // uvPixelAtTexture=vec2( (p.z/cylinderObject.r-1)/2.0, (p.x/cylinderObject.r-1)/2.0 );
+            float angle=getAngle(p.z, -p.x)+angleByTime*2.0*PI;
+            float radius=length(p);
+            uvPixelAtTexture=vec2( (sin(angle)*radius-1)/2, (cos(angle)*radius-1)/2 );
 
             if( texturePlate == TEXTURE_GRAMMOPHONE_PLATE )
             {
@@ -449,7 +453,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
         {
             // uvPixelAtTexture=vec2( 1/atan(p.x, p.z)-1.0, p.y-1.0 );
 
-            float angle=getAngle(p.z, p.x)/(2.0*PI);
+            float angle=getAngle(p.z, p.x)/(2.0*PI)-angleByTime;
 
             uvPixelAtTexture=vec2( angle, p.y*20 ); // vec2( atan(p.x/p.z), p.y)
 
