@@ -6,7 +6,7 @@
   },
 
   "textures": {
-  	"textureGrammophonePlate": "textures/grammophonePlate.jpg",
+  	"textureGrammophonePlate": "textures/grammophonePlate.png",
   	"textureSkinBlack": "textures/skinBlack.jpg",
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",

@@ -253,12 +253,12 @@ float GetLight(vec3 p)
 { 
     // Directional light
     // vec3 lightPos = vec3(5.*sin(fGlobalTime),5.,5.0*cos(fGlobalTime)); // Light Position
-    vec3 lightPos = vec3(5.,5.,5.); // Light Position
+    vec3 lightPos = vec3(5., 5., 5.); // Light Position vec3(5.,5.,5.)
     vec3 l = normalize(lightPos-p); // Light Vector
     vec3 n = GetNormal(p); // Normal Vector
    
-    float dif = dot(n,l); // Diffuse light
-    dif = clamp(dif,0.,1.); // Clamp so it doesnt go below 0
+    float dif = dot(n, l); // Diffuse light
+    dif = clamp(dif, 0., 1.); // Clamp so it doesnt go below 0
 
     return dif;
 }
@@ -451,7 +451,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
             float angle=getAngle(p.z, p.x)/(2.0*PI);
 
-            uvPixelAtTexture=vec2( angle, p.y ); // vec2( atan(p.x/p.z), p.y)
+            uvPixelAtTexture=vec2( angle, p.y*20 ); // vec2( atan(p.x/p.z), p.y)
 
             if( textureRound == TEXTURE_GRAMMOPHONE_ROUND)
             {
@@ -491,7 +491,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
         vec4 lightColor=vec4( vec3(GetLight(p))/4, 1.0 );
 
         // // Mix texture color
-        color=mix(lightColor, textureColor, 0.5);
+        color=mix(lightColor, textureColor, 0.4);
     }
     
     // color = vec4( pow(color.rgb, vec3(0.5545)), color.a); // Gamma correction
