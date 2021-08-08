@@ -253,7 +253,7 @@ float GetLight(vec3 p)
 { 
     // Directional light
     // vec3 lightPos = vec3(5.*sin(fGlobalTime),5.,5.0*cos(fGlobalTime)); // Light Position
-    vec3 lightPos = vec3(5., 5., 5.); // Light Position vec3(5.,5.,5.)
+    vec3 lightPos = vec3(0., 5., 5.); // Light Position vec3(5.,5.,5.)
     vec3 l = normalize(lightPos-p); // Light Vector
     vec3 n = GetNormal(p); // Normal Vector
    
@@ -398,9 +398,9 @@ vec4 showCylinder(vec2 uvPixelPosition,
     // Rotate camera around (0,0,0)
     float rCamRotate=1.4; // 1.4
     float hCam=0.22; // 0.22
-    float x=sin(1.0*0.5)*rCamRotate; // Dynamic camera: sin(-fGlobalTime*0.5)*rCamRotate;
+    float x=sin(0.0)*rCamRotate; // Dynamic camera: sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
-    float z=cos(1.0*0.5)*rCamRotate; // Dynamic camera: cos(-fGlobalTime*0.5)*rCamRotate;
+    float z=cos(0.0)*rCamRotate; // Dynamic camera: cos(-fGlobalTime*0.5)*rCamRotate;
     vec3 ro = vec3(x, y, z);
 
     vec3 camPointTo=vec3(0.0); // vec3(0.0)
