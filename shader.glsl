@@ -372,7 +372,7 @@ vec4 showHead(vec2 uvPixelPosition)
     float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.005)/2.0;
     float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.009)/2.0;
 
-    mat4 transformMat = get2DScaleMatrix(1.9, 1.9) * get2DTranslateMatrix(-0.6+shiftX, 0.85+shiftY);
+    mat4 transformMat = get2DScaleMatrix(2.4, 2.4) * get2DTranslateMatrix(-0.6+shiftX, 0.75+shiftY);
 
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
 
@@ -438,7 +438,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
             }
             else if( texturePlate == TEXTURE_WAVE_PLATE )
             {
-                textureColor=textureWavePlate( vec2( p.z, p.x ) );
+                textureColor=textureWavePlate( vec2(sin(angle), cos(angle))*radius ); // vec2( p.z, p.x )
             }
             else if( texturePlate == TEXTURE_KINGPIN )
             {
