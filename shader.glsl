@@ -352,7 +352,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
 
 
     // Label
-    mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(1.4, 1.4);
+    mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(0.95, 0.95);
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, uvPixelPosition.y, 0.0, 1.0) ).xy;
     vec4 textureColor=vec4(vec3(0.0), 0.0);
     if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
@@ -360,7 +360,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
         textureColor = texture(textureLabel, vec2(uv.x, uv.y) );
     }
     
-    return mix(textureColor, acc, 0.0);
+    return vec4( mix(acc.rgb, textureColor.rgb, textureColor.a), 1.0);
 }
 
 
