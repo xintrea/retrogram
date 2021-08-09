@@ -34,7 +34,7 @@ struct CylinderType
 
 CylinderType cylinderRayMarch=CylinderType( 0.0, 0.0, 0.0, 0.0 );
 const CylinderType objectGrammophonePlate=CylinderType( 1.0, 0.0, 0.05, 0.01 );
-const CylinderType objectWavePlate=CylinderType( 0.97, 0.05, 0.0548, 0.003 );
+const CylinderType objectWavePlate=CylinderType( 0.93, 0.05, 0.0548, 0.003 ); // ( 0.97, 0.05, 0.0548, 0.003 )
 const CylinderType objectKingpin=CylinderType( 0.02, 0.0548, 0.09, 0.008 ); // ( 0.02, 0.0548, 0.09, 0.008 )
 
 
@@ -316,7 +316,7 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     
     float len1=length(uvPixelPosition-center);
     
-    if(len1>maxRadius)
+    if(len1>maxRadius-0.002) // Constant 0.0002 for not show random wave pixel at bottom plate
     {
         return vec4(0.0, 0.0, 0.0, 0.0); // Transparent color
     }
@@ -352,7 +352,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
 
 
     // Label
-    mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(0.95, 0.95);
+    mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(0.79, 0.79); // 0.95
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, uvPixelPosition.y, 0.0, 1.0) ).xy;
     vec4 textureColor=vec4(vec3(0.0), 0.0);
     if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
@@ -397,7 +397,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
     // Rotate camera around (0,0,0)
     float rCamRotate=1.4; // 1.4
-    float hCam=0.22; // 0.22
+    float hCam=0.25; // 0.22
     float x=sin(0.0)*rCamRotate; // Dynamic camera: sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
     float z=cos(0.0)*rCamRotate; // Dynamic camera: cos(-fGlobalTime*0.5)*rCamRotate;
@@ -495,7 +495,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
         vec4 lightColor=vec4( vec3(GetLight(p))/4, 1.0 );
 
         // // Mix texture color
-        color=mix(lightColor, textureColor, 0.4);
+        color=mix(lightColor, textureColor, 0.65);
     }
     
     // color = vec4( pow(color.rgb, vec3(0.5545)), color.a); // Gamma correction
