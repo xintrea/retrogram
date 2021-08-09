@@ -301,7 +301,7 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     
     // Rotate
     mat4 matPlateRotate=get2DTranslateMatrix(center.x, center.y)*
-    get2DRotateMatrix(fGlobalTime)*
+    get2DRotateMatrix( (sin(fGlobalTime*0.5)-1.0)*0.000001 )*
     inverse(get2DScaleMatrix(scaleX, scaleY))*
     inverse(get2DTranslateMatrix(center.x, center.y));
     
@@ -372,7 +372,7 @@ vec4 showHead(vec2 uvPixelPosition)
     float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.005)/2.0;
     float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.009)/2.0;
 
-    mat4 transformMat = get2DScaleMatrix(2.4, 2.4) * get2DTranslateMatrix(-0.6+shiftX, 0.75+shiftY);
+    mat4 transformMat = get2DScaleMatrix(1.2, 1.2*2) * get2DTranslateMatrix(-0.69+shiftX, 0.74+shiftY);
 
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
 
@@ -396,7 +396,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
     uvPixelPosition+=vec2(-0.5, -0.45);
 
     // Rotate camera around (0,0,0)
-    float rCamRotate=1.4; // 1.4
+    float rCamRotate=1.5; // 1.4
     float hCam=0.25; // 0.22
     float x=sin(0.0)*rCamRotate; // Dynamic camera: sin(-fGlobalTime*0.5)*rCamRotate;
     float y=hCam;
