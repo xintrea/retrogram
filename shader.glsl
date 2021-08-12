@@ -1,4 +1,4 @@
-#version 410 core
+#version 420 core
 
 out vec4 FragColor;
                  
@@ -16,7 +16,14 @@ uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
+// uniform sampler2D emptyTexture;
 
+layout(r8ui) uniform uimage2D emptyTexture;
+
+// Various data save/load to texture
+#define txBuf emptyTexture
+#define txSize 1024
+const float txRow = 32.;
 
 const float PI=3.1415926535897932384626433832795;
 
@@ -550,6 +557,9 @@ void main(void)
     {
         color=color4;
     }
+
+    imageStore(emptyTexture, ivec2( floor(gl_FragCoord.x*1024), floor(gl_FragCoord.y*1024)) ,uvec4(128));
+    float value = imageLoad(emptyTexture, ivec2( floor(gl_FragCoord.x*1024), floor(gl_FragCoord.y*1024))).r;
 
     FragColor=color;
 }

@@ -10,7 +10,8 @@
   	"textureSkinBlack": "textures/skinBlack.jpg",
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",
-  	"textureLabel": "textures/label.png"
+  	"textureLabel": "textures/label.png",
+    "emptyTexture": "textures/emptyTexture.png"
   },
 
   "gui": {
