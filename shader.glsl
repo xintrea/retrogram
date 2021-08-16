@@ -26,6 +26,7 @@ layout(r8ui) uniform uimage2D emptyTexture;
 const float txRow = 32.;
 
 const float PI=3.1415926535897932384626433832795;
+const float E=2.7182818284;
 
 const int   RAY_MARCH_MAX_STEPS=100;
 const float RAY_MARCH_MAX_DIST=100.0;
@@ -50,6 +51,19 @@ const int TEXTURE_GRAMMOPHONE_ROUND=2;
 const int TEXTURE_WAVE_PLATE=3;
 const int TEXTURE_WAVE_ROUND=4;
 const int TEXTURE_KINGPIN=5;
+
+
+struct NoteType
+{
+    int figure; // Note picture type
+    float phase;
+    float amp;
+    float timeSpeedFactor;
+    float sizeUpFactor;
+};
+
+#define NOTE_COUNT 2
+NoteType notes[NOTE_COUNT];
 
 
 // ----------------
@@ -89,6 +103,8 @@ float rand(float x){return floatConstruct(hash(floatBitsToUint(x+fGlobalTime)));
 float rand(vec2 v){return floatConstruct(hash(floatBitsToUint(v+fGlobalTime)));}
 float rand(vec3 v){return floatConstruct(hash(floatBitsToUint(v+fGlobalTime)));}
 float rand(vec4 v){return floatConstruct(hash(floatBitsToUint(v+fGlobalTime)));}
+
+float determineRand(float x){return floatConstruct(hash(floatBitsToUint(x)));}
 
 
 // -----------------------
@@ -373,6 +389,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
 
 vec4 showHead(vec2 uvPixelPosition)
 {
+    // Small Lissage shift
     float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
     float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
 
@@ -391,6 +408,70 @@ vec4 showHead(vec2 uvPixelPosition)
     }
 
     return textureColor;
+}
+
+
+// Sinus based random
+// https://www.shadertoy.com/view/sljXWt
+float sinRand(float x)
+{
+    float y1 = abs((( sin(x+E)) + sin(x*E) )/2.0) * cos(x);
+    float y2 = float(mod( int(sin(float(mod( int(x), 11)))*7.0), 7.0))/7.0;
+    return y1*y2;
+}
+
+
+void initNotes()
+{
+    for(int i=0; i<NOTE_COUNT; ++i)
+    {   
+        float seed = float(i)*100.0;
+
+        int figure = int( floor( determineRand(seed)*4.0 ) ); // Form 0 to 3
+        float phase = determineRand(seed+1) * 2.0 * PI;
+        float amp   = determineRand(seed+2) * 1.0;
+        float timeSpeedFactor = determineRand(seed+3)*0.05;
+        float sizeUpFactor    = determineRand(seed+4)*2.0 + 1.0;
+
+        notes[i]=NoteType(figure, phase, amp, timeSpeedFactor, sizeUpFactor);
+    }
+}
+
+
+int getNoteFigure(int i)
+{
+    return notes[i].figure;
+}
+
+
+vec2 getNotePosition(int i, float time)
+{
+    float t=(time+notes[i].phase) * notes[i].timeSpeedFactor;
+
+    float y=mod( t, 1.0 );
+    float x=0.5 + sin(t) * notes[i].amp;
+
+    return vec2(x, y);
+}
+
+
+vec4 showNotes(vec2 uvPixelPosition)
+{
+    initNotes();
+
+    vec4 color=vec4(0.0);
+
+    for(int i=0; i<NOTE_COUNT; ++i) 
+    {
+        float dist = distance( uvPixelPosition, getNotePosition(i, fGlobalTime) );
+
+        if(dist<0.01)
+        {
+            color=vec4( 0.0, 0.5, 1.0, 1.0);
+        }
+    }
+
+    return color;
 }
 
 
@@ -526,6 +607,7 @@ void main(void)
     vec4 color2 = vec4(vec3(0.0), 1.0);
     vec4 color3 = vec4(vec3(0.0), 1.0);
     vec4 color4 = vec4(vec3(0.0), 1.0);
+    vec4 color5 = vec4(vec3(0.0), 1.0);
 
     color1=showCylinder(uvPixelPosition, 
                         objectGrammophonePlate,
@@ -544,6 +626,8 @@ void main(void)
 
     color4=showHead(uvPixelPosition);
 
+    color5=showNotes(uvPixelPosition);
+
     color=color1;
     if(color2.xyz != vec3(0.0) )
     {
@@ -556,6 +640,10 @@ void main(void)
     if(color4.xyz != vec3(0.0) )
     {
         color=color4;
+    }
+    if(color5.xyz != vec3(0.0) )
+    {
+        color=color5;
     }
 
     imageStore(emptyTexture, ivec2( floor(gl_FragCoord.x*1024), floor(gl_FragCoord.y*1024)) ,uvec4(128));
