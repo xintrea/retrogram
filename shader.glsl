@@ -62,7 +62,7 @@ struct NoteType
     float sizeUpFactor;
 };
 
-#define NOTE_COUNT 2
+#define NOTE_COUNT 32
 NoteType notes[NOTE_COUNT];
 
 
@@ -430,7 +430,7 @@ void initNotes()
         int figure = int( floor( determineRand(seed)*4.0 ) ); // Form 0 to 3
         float phase = determineRand(seed+1) * 2.0 * PI;
         float amp   = determineRand(seed+2) * 1.0;
-        float timeSpeedFactor = determineRand(seed+3)*0.05;
+        float timeSpeedFactor = determineRand(seed+3)*1.0;
         float sizeUpFactor    = determineRand(seed+4)*2.0 + 1.0;
 
         notes[i]=NoteType(figure, phase, amp, timeSpeedFactor, sizeUpFactor);
@@ -448,7 +448,9 @@ vec2 getNotePosition(int i, float time)
 {
     float t=(time+notes[i].phase) * notes[i].timeSpeedFactor;
 
-    float y=mod( t, 1.0 );
+    float yScale=10.0; // Y axe flattening ratio 
+
+    float y=mod( t, yScale )/yScale;
     float x=0.5 + sin(t) * notes[i].amp;
 
     return vec2(x, y);
