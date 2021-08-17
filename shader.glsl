@@ -632,6 +632,25 @@ vec4 showCylinder(vec2 uvPixelPosition,
 }
 
 
+vec4 fadeInFilter(vec4 color)
+{
+    float fadeInLen=10.0;
+    float transparent=0.0;
+
+    // if( fGlobalTime < fadeInLen )
+    // {
+    //     float time = fGlobalTime/fadeInLen;
+    //     transparent=smoothstep(0.1, 0.9, time);
+    // }
+    // else
+    // {
+    //     transparent=1.0;
+    // }
+
+    return vec4( color.rgb, 0.1);
+}
+
+
 void main(void)
 {
     // Translate XY coordinats to UV coordinats
@@ -685,6 +704,9 @@ void main(void)
     {
         color=vec4( mix(color.rgb, color5.rgb, color5.a), 1.0 );
     }
+
+    // color=fadeInFilter(color);
+    color=vec4( color.rgb, 0.5 );
 
     FragColor=color;
 }
