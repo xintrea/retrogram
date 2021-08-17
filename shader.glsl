@@ -16,14 +16,6 @@ uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
-// uniform sampler2D emptyTexture;
-
-layout(r8ui) uniform uimage2D emptyTexture;
-
-// Various data save/load to texture
-#define txBuf emptyTexture
-#define txSize 1024
-const float txRow = 32.;
 
 const float PI=3.1415926535897932384626433832795;
 const float E=2.7182818284;
@@ -56,10 +48,20 @@ const int TEXTURE_KINGPIN=5;
 struct NoteType
 {
     int figure; // Note picture type
+    vec3 color;
+
+    float freq;
+    float secondFreq;
+
     float phase;
+    float secondPhase;
+
     float amp;
+    float secondAmp;
+
     float timeSpeedFactor;
     float sizeUpFactor;
+    float axeYShift;
 };
 
 #define NOTE_COUNT 32
@@ -425,15 +427,35 @@ void initNotes()
 {
     for(int i=0; i<NOTE_COUNT; ++i)
     {   
-        float seed = float(i)*100.0;
+        int seed = i*100*NOTE_COUNT;
 
-        int figure = int( floor( determineRand(seed)*4.0 ) ); // Form 0 to 3
-        float phase = determineRand(seed+1) * 2.0 * PI;
-        float amp   = determineRand(seed+2) * 1.0;
-        float timeSpeedFactor = determineRand(seed+3)*1.0;
-        float sizeUpFactor    = determineRand(seed+4)*2.0 + 1.0;
+        int figure = int( floor( determineRand( float(++seed) )*4.0 ) ); // From 0 to 3
+        vec3 color=vec3(determineRand( float(++seed) ), determineRand( float(++seed) ), determineRand( float(++seed) ));
+        
+        float freq       = 1.0 + determineRand( float(++seed)*3.0 );
+        float secondFreq = 1.0 + determineRand( float(++seed)*3.0 );
 
-        notes[i]=NoteType(figure, phase, amp, timeSpeedFactor, sizeUpFactor);
+        float phase       = determineRand( float(++seed) ) * 2.0 * PI;
+        float secondPhase = determineRand( float(++seed) ) * 2.0 * PI;
+
+        float amp       = determineRand( float(++seed) ) * 1.0;
+        float secondAmp = determineRand( float(++seed) ) * 1.0;
+
+        float timeSpeedFactor = 0.2 + determineRand( float(++seed) )*0.8;
+        float sizeUpFactor    = determineRand( float(++seed) )*2.0 + 1.0;
+        float axeYShift=determineRand( float(++seed) )*0.4-0.2;
+
+        notes[i]=NoteType(figure, 
+                          color, 
+                          freq, 
+                          secondFreq, 
+                          phase, 
+                          secondPhase, 
+                          amp, 
+                          secondAmp, 
+                          timeSpeedFactor, 
+                          sizeUpFactor,
+                          axeYShift);
     }
 }
 
@@ -446,12 +468,14 @@ int getNoteFigure(int i)
 
 vec2 getNotePosition(int i, float time)
 {
-    float t=(time+notes[i].phase) * notes[i].timeSpeedFactor;
+    float t1=(time * notes[i].freq       + notes[i].phase)       * notes[i].timeSpeedFactor * 0.2;
+    float t2=(time * notes[i].secondFreq + notes[i].secondPhase) * notes[i].timeSpeedFactor * 0.2;
 
-    float yScale=10.0; // Y axe flattening ratio 
+    float yScale=3.8; // Y axe flattening ratio 
 
-    float y=mod( t, yScale )/yScale;
-    float x=0.5 + sin(t) * notes[i].amp;
+    float y=mod( t1, yScale )/yScale;
+
+    float x=0.5 + notes[i].axeYShift + (sin(t1) * notes[i].amp + sin(t2) * notes[i].secondAmp)/2.0;
 
     return vec2(x, y);
 }
@@ -463,13 +487,27 @@ vec4 showNotes(vec2 uvPixelPosition)
 
     vec4 color=vec4(0.0);
 
+    float timeMute=10.8;
+    float fadeInLen=2.0;
+    float transparent=0.0;
+    if( fGlobalTime > timeMute && fGlobalTime < timeMute+fadeInLen )
+    {
+        float time=(fGlobalTime-timeMute)/fadeInLen;
+        transparent=smoothstep(0.1, 0.9, time);
+    }
+    else if ( fGlobalTime > timeMute+fadeInLen)
+    {
+        transparent=1.0;
+    }
+
     for(int i=0; i<NOTE_COUNT; ++i) 
     {
         float dist = distance( uvPixelPosition, getNotePosition(i, fGlobalTime) );
 
         if(dist<0.01)
         {
-            color=vec4( 0.0, 0.5, 1.0, 1.0);
+            // Nontransparent color set after time delay from start
+            color=vec4( notes[i].color, transparent);
         }
     }
 
@@ -645,11 +683,8 @@ void main(void)
     }
     if(color5.xyz != vec3(0.0) )
     {
-        color=color5;
+        color=vec4( mix(color.rgb, color5.rgb, color5.a), 1.0 );
     }
-
-    imageStore(emptyTexture, ivec2( floor(gl_FragCoord.x*1024), floor(gl_FragCoord.y*1024)) ,uvec4(128));
-    float value = imageLoad(emptyTexture, ivec2( floor(gl_FragCoord.x*1024), floor(gl_FragCoord.y*1024))).r;
 
     FragColor=color;
 }
