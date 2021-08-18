@@ -17,6 +17,8 @@ uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
 uniform sampler2D note1;
+uniform sampler2D note2;
+uniform sampler2D note3;
 
 const float PI=3.1415926535897932384626433832795;
 const float E=2.7182818284;
@@ -443,7 +445,7 @@ void initNotes()
         float secondAmp = determineRand( float(++seed) ) * 1.0;
 
         float timeSpeedFactor = 0.2 + determineRand( float(++seed) )*0.8;
-        float sizeUpFactor    = determineRand( float(++seed) )*2.0 + 1.0;
+        float sizeUpFactor    = determineRand( float(++seed) )*0.31 + 1.0;
         float axeYShift=determineRand( float(++seed) )*0.4-0.2;
 
         notes[i]=NoteType(figure, 
@@ -507,7 +509,8 @@ vec4 showNotes(vec2 uvPixelPosition)
         vec2 notePosition=getNotePosition(i, fGlobalTime);
         float dist = distance( uvPixelPosition, notePosition );
 
-        float r=0.032;
+        // Variable radius for resize note by time
+        float r=0.027 * notes[i].sizeUpFactor * (sin(fGlobalTime*notes[i].freq*0.22+notes[i].phase)/4.0+0.8);
     
         if(dist<r)
         {
@@ -517,7 +520,20 @@ vec4 showNotes(vec2 uvPixelPosition)
             // color=vec4( notes[i].color, transparent);
 
             vec2 uvNoteTexurePosition=(vec2(r, r)+(uvPixelPosition-notePosition))/(2*vec2(r, r));
-            vec4 color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+            vec4 color=vec4( 0.0 );
+
+            if(notes[i].figure==0)
+            {
+                color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+            }
+            if(notes[i].figure==1)
+            {
+                color=texture(note2, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+            }
+            if(notes[i].figure==2 || notes[i].figure==3)
+            {
+                color=texture(note3, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+            }
 
             accColor=vec4( mix(accColor.rgb, color.rgb, color.a), 1.0 );
         }

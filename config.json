@@ -12,7 +12,9 @@
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",
   	"textureLabel": "textures/label.png",
-    "note1": "textures/note1.png"
+    "note1": "textures/note1.png",
+    "note2": "textures/note2.png",
+    "note3": "textures/note3.png"
   },
 
   "gui": {
