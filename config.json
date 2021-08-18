@@ -3,6 +3,7 @@
 
   "window":{ // default window size / state; if there's a setup dialog, it will override it
     "fullscreen":true,
+    "mouseVisible":false
   },
 
   "textures": {
@@ -11,7 +12,7 @@
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",
   	"textureLabel": "textures/label.png",
-    "emptyTexture": "textures/emptyTexture.png"
+    "note1": "textures/note1.png"
   },
 
   "gui": {

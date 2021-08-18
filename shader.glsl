@@ -16,6 +16,7 @@ uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
+uniform sampler2D note1;
 
 const float PI=3.1415926535897932384626433832795;
 const float E=2.7182818284;
@@ -485,9 +486,8 @@ vec4 showNotes(vec2 uvPixelPosition)
 {
     initNotes();
 
-    vec4 color=vec4(0.0);
-
-    float timeMute=10.8;
+    // Transparent delay at start Bonzomatic
+    float timeMute=10.7;
     float fadeInLen=2.0;
     float transparent=0.0;
     if( fGlobalTime > timeMute && fGlobalTime < timeMute+fadeInLen )
@@ -500,18 +500,30 @@ vec4 showNotes(vec2 uvPixelPosition)
         transparent=1.0;
     }
 
+    vec4 accColor=vec4(0.0);
+
     for(int i=0; i<NOTE_COUNT; ++i) 
     {
-        float dist = distance( uvPixelPosition, getNotePosition(i, fGlobalTime) );
+        vec2 notePosition=getNotePosition(i, fGlobalTime);
+        float dist = distance( uvPixelPosition, notePosition );
 
-        if(dist<0.01)
+        float r=0.032;
+    
+        if(dist<r)
         {
             // Nontransparent color set after time delay from start
-            color=vec4( notes[i].color, transparent);
+            
+            // Easy circle
+            // color=vec4( notes[i].color, transparent);
+
+            vec2 uvNoteTexurePosition=(vec2(r, r)+(uvPixelPosition-notePosition))/(2*vec2(r, r));
+            vec4 color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+
+            accColor=vec4( mix(accColor.rgb, color.rgb, color.a), 1.0 );
         }
     }
 
-    return color;
+    return vec4( accColor.rgb, transparent );
 }
 
 
@@ -634,20 +646,20 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
 vec4 fadeInFilter(vec4 color)
 {
-    float fadeInLen=10.0;
+    float fadeInLen=5.0;
     float transparent=0.0;
 
-    // if( fGlobalTime < fadeInLen )
-    // {
-    //     float time = fGlobalTime/fadeInLen;
-    //     transparent=smoothstep(0.1, 0.9, time);
-    // }
-    // else
-    // {
-    //     transparent=1.0;
-    // }
+    if( fGlobalTime < fadeInLen )
+    {
+        float time = fGlobalTime/fadeInLen;
+        transparent=smoothstep(0.1, 0.9, time);
+    }
+    else
+    {
+        transparent=1.0;
+    }
 
-    return vec4( color.rgb, 0.1);
+    return vec4( color.rgb, transparent);
 }
 
 
@@ -705,8 +717,9 @@ void main(void)
         color=vec4( mix(color.rgb, color5.rgb, color5.a), 1.0 );
     }
 
-    // color=fadeInFilter(color);
-    color=vec4( color.rgb, 0.5 );
+    vec4 backgroundColor=vec4( vec3(0.0), 1.0 );
+    color=fadeInFilter(color);
+    color=vec4( mix( backgroundColor.rgb, color.rgb, color.a ), 1.0);
 
     FragColor=color;
 }
