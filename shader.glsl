@@ -19,6 +19,7 @@ uniform sampler2D textureLabel;
 uniform sampler2D note1;
 uniform sampler2D note2;
 uniform sampler2D note3;
+uniform sampler2D note4;
 
 const float PI=3.1415926535897932384626433832795;
 const float E=2.7182818284;
@@ -524,15 +525,19 @@ vec4 showNotes(vec2 uvPixelPosition)
 
             if(notes[i].figure==0)
             {
-                color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(note4, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
-            if(notes[i].figure==1)
+            else if(notes[i].figure==1)
+            {
+                color=texture(note3, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+            }
+            else if(notes[i].figure==2)
             {
                 color=texture(note2, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
-            if(notes[i].figure==2 || notes[i].figure==3)
+            else
             {
-                color=texture(note3, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
 
             accColor=vec4( mix(accColor.rgb, color.rgb, color.a), 1.0 );

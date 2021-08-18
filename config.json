@@ -14,7 +14,8 @@
   	"textureLabel": "textures/label.png",
     "note1": "textures/note1.png",
     "note2": "textures/note2.png",
-    "note3": "textures/note3.png"
+    "note3": "textures/note3.png",
+    "note4": "textures/note4.png"
   },
 
   "gui": {
