@@ -1,10 +1,9 @@
 
 echo "Start music"
-vlc --intf dummy --play-and-exit ./sound/klaudia_blue_shawl.mp3 &
+start "play-klaudia-sound" /MIN .\sound\cmdmp3.exe .\sound\klaudia_blue_shawl.mp3
 
 echo "Start Bonzomatic"
-./bonzomatic
+.\bonzomatic
 
 echo "Stop music"
-kill %1
-
+taskkill /F /FI "WINDOWTITLE eq play-klaudia-sound"
