@@ -16,10 +16,12 @@ uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
-uniform sampler2D note1;
-uniform sampler2D note2;
-uniform sampler2D note3;
-uniform sampler2D note4;
+uniform sampler2D textureBackground;
+uniform sampler2D textureForeground;
+uniform sampler2D textureNote1;
+uniform sampler2D textureNote2;
+uniform sampler2D textureNote3;
+uniform sampler2D textureNote4;
 
 const float PI=3.1415926535897932384626433832795;
 const float E=2.7182818284;
@@ -48,6 +50,7 @@ const int TEXTURE_WAVE_PLATE=3;
 const int TEXTURE_WAVE_ROUND=4;
 const int TEXTURE_KINGPIN=5;
 
+const vec4 TEXTURE_GAMMA_CORRECTION=vec4(1/2.0);
 
 struct NoteType
 {
@@ -399,10 +402,10 @@ vec4 showHead(vec2 uvPixelPosition)
     float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
     float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
 
-    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.005)/2.0;
-    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.009)/2.0;
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0055)/2.0;
+    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0095)/2.0;
 
-    mat4 transformMat = get2DScaleMatrix(1.2, 1.2*2) * get2DTranslateMatrix(-0.69+shiftX, 0.74+shiftY);
+    mat4 transformMat = get2DScaleMatrix(1.2, 1.2*2) * get2DTranslateMatrix(-0.72+shiftX, 0.74+shiftY);
 
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
 
@@ -410,15 +413,27 @@ vec4 showHead(vec2 uvPixelPosition)
 
     if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
     {
-        textureColor = texture(textureHead, vec2(uv.x, uv.y) );
+        textureColor = pow( texture(textureHead, uv ), TEXTURE_GAMMA_CORRECTION );
     }
 
     return textureColor;
 }
 
 
+vec4 showBackground(vec2 uvPixelPosition)
+{
+    return pow( texture(textureBackground, vec2(uvPixelPosition.x, -uvPixelPosition.y) ), TEXTURE_GAMMA_CORRECTION );
+}
+
+
+vec4 showForeground(vec2 uvPixelPosition)
+{
+    return pow( texture(textureForeground, vec2(uvPixelPosition.x, -uvPixelPosition.y) ), TEXTURE_GAMMA_CORRECTION );
+}
+
+
 // Sinus based random
-// https://www.shadertoy.com/view/sljXWt
+// My online sample: https://www.shadertoy.com/view/sljXWt
 float sinRand(float x)
 {
     float y1 = abs((( sin(x+E)) + sin(x*E) )/2.0) * cos(x);
@@ -525,19 +540,19 @@ vec4 showNotes(vec2 uvPixelPosition)
 
             if(notes[i].figure==0)
             {
-                color=texture(note4, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(textureNote4, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
             else if(notes[i].figure==1)
             {
-                color=texture(note3, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(textureNote3, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
             else if(notes[i].figure==2)
             {
-                color=texture(note2, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(textureNote2, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
             else
             {
-                color=texture(note1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
+                color=texture(textureNote1, vec2( uvNoteTexurePosition.x, -uvNoteTexurePosition.y) );
             }
 
             accColor=vec4( mix(accColor.rgb, color.rgb, color.a), 1.0 );
@@ -595,7 +610,7 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
             if( texturePlate == TEXTURE_GRAMMOPHONE_PLATE )
             {
-                textureColor=texture(textureSkinBlack, uvPixelAtTexture);
+                textureColor=pow( texture(textureSkinBlack, uvPixelAtTexture), vec4(1/1.1) );
             }
             else if( texturePlate == TEXTURE_WAVE_PLATE )
             {
@@ -616,11 +631,11 @@ vec4 showCylinder(vec2 uvPixelPosition,
 
             float angle=getAngle(p.z, p.x)/(2.0*PI)-angleByTime;
 
-            uvPixelAtTexture=vec2( angle, p.y*20 ); // vec2( atan(p.x/p.z), p.y)
+            uvPixelAtTexture=vec2( angle, p.y*11 ); // vec2( atan(p.x/p.z), p.y)
 
             if( textureRound == TEXTURE_GRAMMOPHONE_ROUND)
             {
-                textureColor=texture(textureGrammophonePlate, uvPixelAtTexture);
+                textureColor=pow( texture(textureGrammophonePlate, uvPixelAtTexture), vec4(1/1.2) );
             }
             else if( textureRound == TEXTURE_WAVE_ROUND)
             {
@@ -686,9 +701,10 @@ vec4 fadeInFilter(vec4 color)
 
 void main(void)
 {
-    // Translate XY coordinats to UV coordinats
-    vec2 uvPixelPosition=vec2(gl_FragCoord.x/v2Resolution.x, gl_FragCoord.y/v2Resolution.y);
-    uvPixelPosition/=vec2(v2Resolution.y/v2Resolution.x, 1.0);
+    vec2 uv=vec2(gl_FragCoord.x/v2Resolution.x, gl_FragCoord.y/v2Resolution.y);
+
+    // Translate XY coordinats to UV scane coordinats
+    vec2 uvPixelPosition=uv/vec2(v2Resolution.y/v2Resolution.x, 1.0);
     float sideFieldWidth=(v2Resolution.x-v2Resolution.y)/2.0; // Width in pixel
     float uvSideFieldWidth=(v2Resolution.y+sideFieldWidth)/v2Resolution.y-1.0;
     uvPixelPosition=uvPixelPosition-vec2(uvSideFieldWidth, 0.0);
@@ -700,47 +716,45 @@ void main(void)
     vec4 color3 = vec4(vec3(0.0), 1.0);
     vec4 color4 = vec4(vec3(0.0), 1.0);
     vec4 color5 = vec4(vec3(0.0), 1.0);
+    vec4 color6 = vec4(vec3(0.0), 1.0);
+    vec4 color7 = vec4(vec3(0.0), 1.0);
 
-    color1=showCylinder(uvPixelPosition, 
+    color1=showBackground(uv);
+
+    color2=showCylinder(uvPixelPosition, 
                         objectGrammophonePlate,
                         TEXTURE_GRAMMOPHONE_PLATE, 
                         TEXTURE_GRAMMOPHONE_ROUND);
 
-    color2=showCylinder(uvPixelPosition,
+    color3=showCylinder(uvPixelPosition,
                         objectWavePlate,
                         TEXTURE_WAVE_PLATE,
                         TEXTURE_WAVE_ROUND);
 
-    color3=showCylinder(uvPixelPosition,
+    color4=showCylinder(uvPixelPosition,
                         objectKingpin,
                         TEXTURE_KINGPIN,
                         TEXTURE_KINGPIN);
 
-    color4=showHead(uvPixelPosition);
+    color5=showHead(uvPixelPosition);
 
-    color5=showNotes(uvPixelPosition);
+    color6=showForeground(uv);
+
+    color7=showNotes(uvPixelPosition);
 
     color=color1;
-    if(color2.xyz != vec3(0.0) )
-    {
-        color=color2;
-    }
-    if(color3.xyz != vec3(0.0) )
-    {
-        color=color3;
-    }
-    if(color4.xyz != vec3(0.0) )
-    {
-        color=color4;
-    }
-    if(color5.xyz != vec3(0.0) )
-    {
-        color=vec4( mix(color.rgb, color5.rgb, color5.a), 1.0 );
-    }
+    if(color1.xyz != vec3(0.0) ) { color=color1; }    
+    if(color2.xyz != vec3(0.0) ) { color=color2; }
+    if(color3.xyz != vec3(0.0) ) { color=color3; }
+    if(color4.xyz != vec3(0.0) ) { color=color4; }
+    if(color5.xyz != vec3(0.0) ) { color=color5; }
+    if(color6.xyz != vec3(0.0) ) { color=color6; }
+    if(color7.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color7.rgb, color7.a), 1.0 ); }
 
-    vec4 backgroundColor=vec4( vec3(0.0), 1.0 );
+    // Apply fade in filter
+    vec4 darkColor=vec4( vec3(0.0), 1.0 );
     color=fadeInFilter(color);
-    color=vec4( mix( backgroundColor.rgb, color.rgb, color.a ), 1.0);
+    color=vec4( mix( darkColor.rgb, color.rgb, color.a ), 1.0);
 
     FragColor=color;
 }

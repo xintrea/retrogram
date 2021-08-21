@@ -2,7 +2,9 @@
   "skipSetupDialog": true, // If true, setup dialog will be suppressed - all values you provide below will be used without validation (at your own risk!)
 
   "window":{ // default window size / state; if there's a setup dialog, it will override it
-    "fullscreen":false,
+    "fullscreen":true,
+    "width":1280,
+    "height":720,
     "mouseVisible":false
   },
 
@@ -12,10 +14,12 @@
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",
   	"textureLabel": "textures/label.png",
-    "note1": "textures/note1.png",
-    "note2": "textures/note2.png",
-    "note3": "textures/note3.png",
-    "note4": "textures/note4.png"
+  	"textureBackground": "textures/background.png",
+  	"textureForeground": "textures/foreground.png",
+    "textureNote1": "textures/note1.png",
+    "textureNote2": "textures/note2.png",
+    "textureNote3": "textures/note3.png",
+    "textureNote4": "textures/note4.png"
   },
 
   "gui": {
