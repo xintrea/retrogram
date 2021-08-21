@@ -1,7 +1,8 @@
 #!/bin/bash
 
 echo "Start music"
-vlc --intf dummy --play-and-exit ./sound/klaudia_blue_shawl.mp3 &
+# vlc --intf dummy --play-and-exit ./sound/klaudia_blue_shawl.mp3 &
+mpg123 ./sound/klaudia_blue_shawl.mp3 &
 
 echo "Start Bonzomatic"
 ./bonzomatic
