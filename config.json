@@ -2,7 +2,7 @@
   "skipSetupDialog": true, // If true, setup dialog will be suppressed - all values you provide below will be used without validation (at your own risk!)
 
   "window":{ // default window size / state; if there's a setup dialog, it will override it
-    "fullscreen":false,
+    "fullscreen":true,
     "width":1280,
     "height":720,
     "mouseVisible":false
@@ -14,6 +14,8 @@
   	"textureKingpin": "textures/kingpin.png",
   	"textureHead": "textures/head.png",
   	"textureLabel": "textures/label.png",
+  	"textureShadowKingpin": "textures/shadowKingpin.png",
+  	"textureShadowHead": "textures/shadowHead.png",
   	"textureBackground": "textures/background.png",
   	"textureForeground": "textures/foreground.png",
     "textureNote1": "textures/note1.png",

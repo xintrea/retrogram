@@ -16,6 +16,8 @@ uniform sampler2D textureSkinBlack;
 uniform sampler2D textureKingpin;
 uniform sampler2D textureHead;
 uniform sampler2D textureLabel;
+uniform sampler2D textureShadowKingpin;
+uniform sampler2D textureShadowHead;
 uniform sampler2D textureBackground;
 uniform sampler2D textureForeground;
 uniform sampler2D textureNote1;
@@ -401,9 +403,8 @@ vec4 showHead(vec2 uvPixelPosition)
     // Small Lissage shift
     float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
     float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
-
-    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0057)/2.0;
     float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0097)/2.0;
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0057)/2.0;
 
     mat4 transformMat = get2DScaleMatrix(1.2, 1.2*2) * get2DTranslateMatrix(-0.72+shiftX, 0.74+shiftY);
 
@@ -414,6 +415,46 @@ vec4 showHead(vec2 uvPixelPosition)
     if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
     {
         textureColor = pow( texture(textureHead, uv ), TEXTURE_GAMMA_CORRECTION );
+    }
+
+    return textureColor;
+}
+
+
+vec4 showShadowKingpin(vec2 uvPixelPosition)
+{
+    mat4 transformMat = get2DScaleMatrix(10.0, 10.0) * get2DTranslateMatrix(-0.462, 0.535);
+
+    vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
+
+    vec4 textureColor=vec4(0.0);
+
+    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
+    {
+        textureColor = pow( texture(textureShadowKingpin, uv ), TEXTURE_GAMMA_CORRECTION );
+    }
+
+    return textureColor;
+}
+
+
+vec4 showShadowHead(vec2 uvPixelPosition)
+{
+    // Small Lissage shift with coefficient as showHead
+    float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
+    float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
+    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0097)/2.0 / 2.0; 
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0057)/2.0 / 2.0;
+
+    mat4 transformMat = get2DScaleMatrix(1.6, 1.6*4) * get2DTranslateMatrix(-0.745+shiftX, 0.356+shiftY);
+
+    vec2 uv = ( transformMat * vec4(uvPixelPosition.x, -uvPixelPosition.y, 0.0, 1.0) ).xy;
+
+    vec4 textureColor=vec4(0.0);
+
+    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
+    {
+        textureColor = pow( texture(textureShadowHead, uv ), TEXTURE_GAMMA_CORRECTION );
     }
 
     return textureColor;
@@ -465,7 +506,7 @@ vec4 showLamp(vec2 uvPixelPosition)
 #define CINEMA_BLOTCHES
 #define CINEMA_GRAIN
 
-vec2 cuv; // Cinema uv, speed optimization
+vec2 cuv=vec2(0.0); // Cinema uv, speed optimization
 
 
 float cinemaRandomLine(float seed)
@@ -873,6 +914,8 @@ void main(void)
     vec4 color6 = vec4(vec3(0.0), 1.0);
     vec4 color7 = vec4(vec3(0.0), 1.0);
     vec4 color8 = vec4(vec3(0.0), 1.0);
+    vec4 color9 = vec4(vec3(0.0), 1.0);
+    vec4 color10 = vec4(vec3(0.0), 1.0);
 
     color1=showBackground(uv);
 
@@ -893,11 +936,14 @@ void main(void)
                         TEXTURE_KINGPIN,
                         TEXTURE_KINGPIN);
 
-    color6=showHead(uvPixelPosition);
+    color6=showShadowKingpin(uvPixelPosition);
+    color7=showShadowHead(uvPixelPosition);
+    
+    color8=showHead(uvPixelPosition);
 
-    color7=showForeground(uv);
+    color9=showForeground(uv);
 
-    color8=showNotes(uvPixelPosition);
+    color10=showNotes(uvPixelPosition);
 
     color=color1;
     if(color1.xyz != vec3(0.0) ) { color=color1; }    
@@ -905,9 +951,11 @@ void main(void)
     if(color3.xyz != vec3(0.0) ) { color=color3; }
     if(color4.xyz != vec3(0.0) ) { color=color4; }
     if(color5.xyz != vec3(0.0) ) { color=color5; }
-    if(color6.xyz != vec3(0.0) ) { color=color6; }
-    if(color7.xyz != vec3(0.0) ) { color=color7; }
-    if(color8.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color8.rgb, color8.a), 1.0 ); } // Notes
+    color=vec4( mix(color.rgb, color6.rgb, color6.a), 1.0 ); // Shadow kingpin
+    color=vec4( mix(color.rgb, color7.rgb, color7.a), 1.0 ); // Shadow head
+    if(color8.xyz != vec3(0.0) ) { color=color8; }
+    if(color9.xyz != vec3(0.0) ) { color=color9; }
+    if(color10.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color10.rgb, color10.a), 1.0 ); } // Notes
 
     // Apply cinema filter
     vec4 cinemaColor=cinemaFilter(uv, color);
