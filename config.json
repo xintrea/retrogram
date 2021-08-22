@@ -2,7 +2,7 @@
   "skipSetupDialog": true, // If true, setup dialog will be suppressed - all values you provide below will be used without validation (at your own risk!)
 
   "window":{ // default window size / state; if there's a setup dialog, it will override it
-    "fullscreen":true,
+    "fullscreen":false,
     "width":1280,
     "height":720,
     "mouseVisible":false

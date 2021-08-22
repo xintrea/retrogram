@@ -402,8 +402,8 @@ vec4 showHead(vec2 uvPixelPosition)
     float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
     float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
 
-    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0055)/2.0;
-    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0095)/2.0;
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0057)/2.0;
+    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0097)/2.0;
 
     mat4 transformMat = get2DScaleMatrix(1.2, 1.2*2) * get2DTranslateMatrix(-0.72+shiftX, 0.74+shiftY);
 
@@ -429,6 +429,160 @@ vec4 showBackground(vec2 uvPixelPosition)
 vec4 showForeground(vec2 uvPixelPosition)
 {
     return pow( texture(textureForeground, vec2(uvPixelPosition.x, -uvPixelPosition.y) ), TEXTURE_GAMMA_CORRECTION );
+}
+
+
+vec4 showLamp(vec2 uvPixelPosition)
+{
+    // Small Lissage shift
+    float firstHarmonicX = (sin(fGlobalTime*0.7)/2)*0.005;
+    float firstHarmonicY = (cos(fGlobalTime*0.7)/2)*0.009;
+
+    float shiftX = (firstHarmonicX + (sin(fGlobalTime)/2)*0.0097)/1.0;
+    float shiftY = (firstHarmonicY + (cos(fGlobalTime)/2)*0.0057)/1.0;
+
+    vec2 lampCenter=vec2(0.2+shiftX, 1.02+shiftY);
+
+    float intensity=1.0-rand(fGlobalTime)*0.05; // All fill white color
+    float transparent=pow( 1.0-distance(uvPixelPosition, lampCenter)/sqrt(2) , 12 ); // 1.0-pow( sqrt(distance(uvPixelPosition, lampCenter)), 20 );
+
+    vec4 color=vec4( vec3( 1.0*intensity, 0.8*intensity, 0.7*intensity ), transparent );
+
+    // if(color.r<0.00000001)
+    //     color=vec4( vec3(0.0), 1.0 );
+
+    return color;
+}
+
+// ----------------------------------------------------
+// Cinema filter
+// Thanks Jmpep! (https://www.shadertoy.com/user/jmpep)
+// ----------------------------------------------------
+
+#define CINEMA_FREQUENCY 20
+// #define CINEMA_BLACK_AND_WHITE
+// #define CINEMA_LINES_AND_FLICKER
+#define CINEMA_BLOTCHES
+#define CINEMA_GRAIN
+
+vec2 cuv; // Cinema uv, speed optimization
+
+
+float cinemaRandomLine(float seed)
+{
+	float b = 0.01 * determineRand(seed);
+	float a = determineRand(seed+1.0);
+	float c = determineRand(seed+2.0) - 0.5;
+	float mu = determineRand(seed+3.0);
+	
+	float l = 1.0;
+
+    // Show lines, but too more blink
+	if ( mu > 0.2)
+		l = pow(  abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 ) ;
+	else
+		l = 2.0 - pow( abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 );				
+	
+	return mix(0.32, 1.0, l);
+
+    // l = sin(fGlobalTime)/2.0+0.5;
+    // return l;
+}
+
+
+float cinemaRandomBlotch(float seed)
+{
+	float x = rand(seed);
+	float y = rand(seed+1.0);
+	float s = 0.008 * rand(seed+2.0); // Blotch size
+	
+	vec2 p = vec2(x,y) - cuv;
+	p.x *= v2Resolution.x / v2Resolution.y;
+	float a = atan(p.y,p.x);
+	float v = 1.0;
+	float ss = s*s * (sin(6.2831*a*x)*0.1 + 1.0);
+	
+	if ( dot(p,p) < ss ) v = 0.25; // 0.2
+	else
+		v = pow(dot(p,p) - ss, 1.0/48.0);
+	
+	return mix(0.3 + 0.2 * (1.0 - (s / 0.02)), 1.0, v);
+}
+
+
+vec4 cinemaFilter(vec2 iuv, vec4 icolor)
+{
+    cuv=iuv;
+
+    // Set frequency of global effect to 15 variations per second
+    float t = float(int(fGlobalTime * CINEMA_FREQUENCY));
+    
+    // Get some image movement
+    // vec2 suv = cuv + 0.002 * vec2( rand(t), rand(t + 23.0));
+    
+    // Get the image
+    // vec3 image = texture( texPreviousFrame, vec2(suv.x, suv.y) ).xyz;
+    vec3 image = icolor.xyz;
+    
+    #ifdef CINEMA_BLACK_AND_WHITE
+    // Convert it to B/W
+    float luma = dot( vec3(0.2126, 0.7152, 0.0722), image );
+    vec3 oldImage = luma * vec3(0.7, 0.7, 0.7);
+    #else
+    vec3 oldImage = image;
+    #endif
+    
+    // Create a time-varying vignetting effect
+    float vI = 16.0 * (cuv.x * (1.0-cuv.x) * cuv.y * (1.0-cuv.y));
+    // vI *= mix( 0.7, 1.0, rand(t + 0.5));
+    
+    // Add additive flicker
+    vI += 0.85 + 0.05 * rand(t+8.);
+    
+    // Add a fixed vignetting (independent of the flicker)
+    vI *= pow(16.0 * cuv.x * (1.0-cuv.x) * cuv.y * (1.0-cuv.y), 0.4);
+    
+    // Add some random lines (and some multiplicative flicker. Oh well.)
+    #ifdef CINEMA_LINES_AND_FLICKER
+    int l = int(8.0 * rand(t+7.0));
+    
+    // Accumulation calling
+    if ( l > 0 ) vI *= cinemaRandomLine( t+6.0+17.* float(0));
+    if ( l > 1 ) vI *= cinemaRandomLine( t+6.0+17.* float(1));
+    if ( l > 2 ) vI *= cinemaRandomLine( t+6.0+17.* float(2));		
+    if ( l > 3 ) vI *= cinemaRandomLine( t+6.0+17.* float(3));
+    if ( l > 4 ) vI *= cinemaRandomLine( t+6.0+17.* float(4));
+    if ( l > 5 ) vI *= cinemaRandomLine( t+6.0+17.* float(5));
+    if ( l > 6 ) vI *= cinemaRandomLine( t+6.0+17.* float(6));
+    if ( l > 7 ) vI *= cinemaRandomLine( t+6.0+17.* float(7));
+    
+    #endif
+    
+    // Add some random blotches.
+    #ifdef CINEMA_BLOTCHES
+    int s = int( max(8.0 * rand(t+18.0) -2.0, 0.0 ));
+
+    // Accumulation calling
+    if ( s > 0 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(0));
+    if ( s > 1 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(1));
+    if ( s > 2 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(2));
+    if ( s > 3 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(3));
+    if ( s > 4 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(4));
+    if ( s > 5 ) vI *= cinemaRandomBlotch( t+6.0+19.* float(5));
+
+    #endif
+
+    vec4 color;
+
+    // Show the image modulated by the defects
+    color.xyz = oldImage * vI;
+    
+    // Add some grain
+    #ifdef CINEMA_GRAIN
+    color.xyz *= (1.0+(rand(cuv+t*.01)-.2)*.15);		
+    #endif		
+
+    return color;
 }
 
 
@@ -718,38 +872,46 @@ void main(void)
     vec4 color5 = vec4(vec3(0.0), 1.0);
     vec4 color6 = vec4(vec3(0.0), 1.0);
     vec4 color7 = vec4(vec3(0.0), 1.0);
+    vec4 color8 = vec4(vec3(0.0), 1.0);
 
     color1=showBackground(uv);
 
-    color2=showCylinder(uvPixelPosition, 
+    color2=showLamp(uv);
+
+    color3=showCylinder(uvPixelPosition, 
                         objectGrammophonePlate,
                         TEXTURE_GRAMMOPHONE_PLATE, 
                         TEXTURE_GRAMMOPHONE_ROUND);
 
-    color3=showCylinder(uvPixelPosition,
+    color4=showCylinder(uvPixelPosition,
                         objectWavePlate,
                         TEXTURE_WAVE_PLATE,
                         TEXTURE_WAVE_ROUND);
 
-    color4=showCylinder(uvPixelPosition,
+    color5=showCylinder(uvPixelPosition,
                         objectKingpin,
                         TEXTURE_KINGPIN,
                         TEXTURE_KINGPIN);
 
-    color5=showHead(uvPixelPosition);
+    color6=showHead(uvPixelPosition);
 
-    color6=showForeground(uv);
+    color7=showForeground(uv);
 
-    color7=showNotes(uvPixelPosition);
+    color8=showNotes(uvPixelPosition);
 
     color=color1;
     if(color1.xyz != vec3(0.0) ) { color=color1; }    
-    if(color2.xyz != vec3(0.0) ) { color=color2; }
+    if(color2.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color2.rgb, color2.a), 1.0 ); } // Lamp
     if(color3.xyz != vec3(0.0) ) { color=color3; }
     if(color4.xyz != vec3(0.0) ) { color=color4; }
     if(color5.xyz != vec3(0.0) ) { color=color5; }
     if(color6.xyz != vec3(0.0) ) { color=color6; }
-    if(color7.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color7.rgb, color7.a), 1.0 ); }
+    if(color7.xyz != vec3(0.0) ) { color=color7; }
+    if(color8.xyz != vec3(0.0) ) { color=vec4( mix(color.rgb, color8.rgb, color8.a), 1.0 ); } // Notes
+
+    // Apply cinema filter
+    vec4 cinemaColor=cinemaFilter(uv, color);
+    color=mix(color, cinemaColor, 0.7);
 
     // Apply fade in filter
     vec4 darkColor=vec4( vec3(0.0), 1.0 );
