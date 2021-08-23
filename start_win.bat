@@ -1,6 +1,6 @@
 
 echo "Start music"
-start "play-klaudia-sound" /MIN .\sound\cmdmp3.exe .\sound\klaudia_blue_shawl.mp3
+start "play-klaudia-sound" /MIN .\sound\mpg123.exe .\sound\klaudia_blue_shawl.mp3
 
 echo "Start Bonzomatic"
 .\bonzomatic
