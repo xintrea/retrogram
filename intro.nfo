@@ -1,0 +1,22 @@
+
+R E T R O G R A M
+
+Intro name: ..... Retrogram
+Author: ......... Sergey Stepanov AKA Xintrea
+Platform: ....... PC / Windows 64 bit / Linux 64 bit
+Dependencies: ... OpenGL / MESA 
+Demoparty: ...... Chaos Construction 2021
+Compo: .......... One Scene demo compo (combined)
+Info: ........... No plasma, no tunnels, no strange 3D forms. Let's just listen to music.
+Duration: ....... 2:50 sec
+
+
+Windows:
+
+Run start_win.bat
+
+
+Linux:
+
+1. Install mpg123 package for play sound
+2. Run start_lin.sh

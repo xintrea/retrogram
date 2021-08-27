@@ -1,7 +1,7 @@
 {
-  "skipSetupDialog": true, // If true, setup dialog will be suppressed - all values you provide below will be used without validation (at your own risk!)
+  "skipSetupDialog": true,
 
-  "window":{ // default window size / state; if there's a setup dialog, it will override it
+  "window":{
     "fullscreen":true,
     "width":1280,
     "height":720,
@@ -10,15 +10,15 @@
   },
 
   "textures": {
-  	"textureGrammophonePlate": "textures/grammophonePlate.png",
-  	"textureSkinBlack": "textures/skinBlack.jpg",
-  	"textureKingpin": "textures/kingpin.png",
-  	"textureHead": "textures/head.png",
-  	"textureLabel": "textures/label.png",
-  	"textureShadowKingpin": "textures/shadowKingpin.png",
-  	"textureShadowHead": "textures/shadowHead.png",
-  	"textureBackground": "textures/background.png",
-  	"textureForeground": "textures/foreground.png",
+    "textureGrammophonePlate": "textures/grammophonePlate.png",
+    "textureSkinBlack": "textures/skinBlack.jpg",
+    "textureKingpin": "textures/kingpin.png",
+    "textureHead": "textures/head.png",
+    "textureLabel": "textures/label.png",
+    "textureShadowKingpin": "textures/shadowKingpin.png",
+    "textureShadowHead": "textures/shadowHead.png",
+    "textureBackground": "textures/background.png",
+    "textureForeground": "textures/foreground.png",
     "textureNote1": "textures/note1.png",
     "textureNote2": "textures/note2.png",
     "textureNote3": "textures/note3.png",
