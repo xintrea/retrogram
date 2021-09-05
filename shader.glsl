@@ -184,23 +184,23 @@ float getAngle(float x, float y)
 
 // Cone with correct distances to tip and base circle. Y is up, 0 is in the middle of the base.
 float fCone(vec3 p, float radius, float height) {
-	vec2 q = vec2(length(p.xz), p.y);
-	vec2 tip = q - vec2(0, height);
-	vec2 mantleDir = normalize(vec2(height, radius));
-	float mantle = dot(tip, mantleDir);
-	float d = max(mantle, -q.y);
-	float projected = dot(tip, vec2(mantleDir.y, -mantleDir.x));
-	
-	// distance to tip
-	if ((q.y > height) && (projected < 0)) {
-		d = max(d, length(tip));
-	}
-	
-	// distance to base ring
-	if ((q.x > radius) && (projected > length(vec2(height, radius)))) {
-		d = max(d, length(q - vec2(radius, 0)));
-	}
-	return d;
+    vec2 q = vec2(length(p.xz), p.y);
+    vec2 tip = q - vec2(0, height);
+    vec2 mantleDir = normalize(vec2(height, radius));
+    float mantle = dot(tip, mantleDir);
+    float d = max(mantle, -q.y);
+    float projected = dot(tip, vec2(mantleDir.y, -mantleDir.x));
+
+    // distance to tip
+    if ((q.y > height) && (projected < 0)) {
+        d = max(d, length(tip));
+    }
+
+    // distance to base ring
+    if ((q.x > radius) && (projected > length(vec2(height, radius)))) {
+        d = max(d, length(q - vec2(radius, 0)));
+    }
+    return d;
 }
 
 
@@ -213,7 +213,7 @@ float sdCylinder(vec3 p,
     // todo: chamfer not using, try add support chamfer
 
     // Distance to point in xz plane
-	float distanceXZ = length(p.xz) - r;
+    float distanceXZ = length(p.xz) - r;
 
     // Distance to point in Y axis
     float distanceY = p.y - topHeight; // Optimisation. By defaul calculate distance for area from topHeight to +inf
@@ -254,7 +254,7 @@ float GetDist(vec3 p)
 
 
 float RayMarch(vec3 ro, vec3 rd) {
-	float dO=0.;
+    float dO=0.;
     
     for(int i=0; i<RAY_MARCH_MAX_STEPS; i++) 
     {
@@ -271,7 +271,7 @@ float RayMarch(vec3 ro, vec3 rd) {
 }
 
 vec3 GetNormal(vec3 p) {
-	float d = GetDist(p);
+    float d = GetDist(p);
     vec2 e = vec2(.001, 0);
     
     vec3 n = d - vec3(
@@ -328,7 +328,7 @@ vec3 cameraDirection (vec3 ro, vec3 target, vec2 uv) {
 vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusShift, float angle)
 {
     // Center of plate and rotate center
-    vec2 center=vec2(0, 0); // vec2(.5, 0.38);
+    vec2 center=vec2(0.0, 0.0); // vec2(.5, 0.38);
 
     float scaleX=1.0;
     float scaleY=1.0;
@@ -339,9 +339,10 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     inverse(get2DScaleMatrix(scaleX, scaleY))*
     inverse(get2DTranslateMatrix(center.x, center.y));
     
-    vec4 afterRotatePos=vec4(uvPixelPosition.x, uvPixelPosition.y, 0, 1);
+    vec4 afterRotatePos=vec4(uvPixelPosition.x, uvPixelPosition.y, 0.0, 1.0);
     afterRotatePos=matPlateRotate*afterRotatePos;
     
+    // Update uvPixelPosition by rotate position
     uvPixelPosition=vec2(afterRotatePos.x, afterRotatePos.y);
     
     // Small mix random by coordinats
@@ -360,13 +361,12 @@ vec4 wavePlate(vec2 uvPixelPosition, float maxRadius, float waveLen, vec2 focusS
     float len2=length(uvPixelPosition+focusShift-center);
     float c2=sin(len2/waveLen);
     
-    // float c=(c1+c2)/4.0-0.1; // Sybstract for saturation control, best diapason  0.1...0.2
-    float c=(c1+c2)/4+0.05; // Sybstract for saturation control, best diapason  0.1...0.2
+    float c=(c1+c2)/4.0+0.05; // Sybstract for saturation control, best diapason  0.1...0.2
     
     // Small mix random by color
     // c=c-0.1+rand(uvPixelPosition.x*uvPixelPosition.y)/10;
     
-    return vec4( vec3( clamp(0.0, 1.0, c) ), 1.0);
+    return vec4( vec3( clamp(c, 0.0, 1.0) ), 1.0);
 }
 
 vec4 textureWavePlate(vec2 uvPixelPosition)
@@ -389,7 +389,7 @@ vec4 textureWavePlate(vec2 uvPixelPosition)
     mat4 transformMat = get2DTranslateMatrix(0.5, 0.5) * get2DScaleMatrix(0.79, 0.79); // 0.95
     vec2 uv = ( transformMat * vec4(uvPixelPosition.x, uvPixelPosition.y, 0.0, 1.0) ).xy;
     vec4 textureColor=vec4(vec3(0.0), 0.0);
-    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0 && uv.y<=1.0)
+    if(uv.x>=0.0 && uv.x<=1.0 && uv.y>=0.0 && uv.y<=1.0)
     {
         textureColor = texture(textureLabel, vec2(uv.x, uv.y) );
     }
@@ -511,20 +511,20 @@ vec2 cuv=vec2(0.0); // Cinema uv, speed optimization
 
 float cinemaRandomLine(float seed)
 {
-	float b = 0.01 * determineRand(seed);
-	float a = determineRand(seed+1.0);
-	float c = determineRand(seed+2.0) - 0.5;
-	float mu = determineRand(seed+3.0);
-	
-	float l = 1.0;
+    float b = 0.01 * determineRand(seed);
+    float a = determineRand(seed+1.0);
+    float c = determineRand(seed+2.0) - 0.5;
+    float mu = determineRand(seed+3.0);
+
+    float l = 1.0;
 
     // Show lines, but too more blink
-	if ( mu > 0.2)
-		l = pow(  abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 ) ;
-	else
-		l = 2.0 - pow( abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 );				
-	
-	return mix(0.32, 1.0, l);
+    if ( mu > 0.2)
+        l = pow(  abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 ) ;
+    else
+        l = 2.0 - pow( abs(a * cuv.x + b * cuv.y + c), 1.0/24.0 );
+
+    return mix(0.32, 1.0, l);
 
     // l = sin(fGlobalTime)/2.0+0.5;
     // return l;
@@ -533,21 +533,22 @@ float cinemaRandomLine(float seed)
 
 float cinemaRandomBlotch(float seed)
 {
-	float x = rand(seed);
-	float y = rand(seed+1.0);
-	float s = 0.008 * rand(seed+2.0); // Blotch size
-	
-	vec2 p = vec2(x,y) - cuv;
-	p.x *= v2Resolution.x / v2Resolution.y;
-	float a = atan(p.y,p.x);
-	float v = 1.0;
-	float ss = s*s * (sin(6.2831*a*x)*0.1 + 1.0);
-	
-	if ( dot(p,p) < ss ) v = 0.25; // 0.2
-	else
-		v = pow(dot(p,p) - ss, 1.0/48.0);
-	
-	return mix(0.3 + 0.2 * (1.0 - (s / 0.02)), 1.0, v);
+    float x = rand(seed);
+    float y = rand(seed+1.0);
+    float s = 0.008 * rand(seed+2.0); // Blotch size
+
+    vec2 p = vec2(x,y) - cuv;
+    p.x *= v2Resolution.x / v2Resolution.y;
+    float a = atan(p.y,p.x);
+    float v = 1.0;
+    float ss = s*s * (sin(6.2831*a*x)*0.1 + 1.0);
+
+    if ( dot(p,p) < ss )
+        v = 0.25; // 0.2
+    else
+        v = pow(dot(p,p) - ss, 1.0/48.0);
+
+    return mix(0.3 + 0.2 * (1.0 - (s / 0.02)), 1.0, v);
 }
 
 
@@ -590,7 +591,7 @@ vec4 cinemaFilter(vec2 iuv, vec4 icolor)
     // Accumulation calling
     if ( l > 0 ) vI *= cinemaRandomLine( t+6.0+17.* float(0));
     if ( l > 1 ) vI *= cinemaRandomLine( t+6.0+17.* float(1));
-    if ( l > 2 ) vI *= cinemaRandomLine( t+6.0+17.* float(2));		
+    if ( l > 2 ) vI *= cinemaRandomLine( t+6.0+17.* float(2));
     if ( l > 3 ) vI *= cinemaRandomLine( t+6.0+17.* float(3));
     if ( l > 4 ) vI *= cinemaRandomLine( t+6.0+17.* float(4));
     if ( l > 5 ) vI *= cinemaRandomLine( t+6.0+17.* float(5));
@@ -620,8 +621,8 @@ vec4 cinemaFilter(vec2 iuv, vec4 icolor)
     
     // Add some grain
     #ifdef CINEMA_GRAIN
-    color.xyz *= (1.0+(rand(cuv+t*.01)-.2)*.15);		
-    #endif		
+    color.xyz *= (1.0+(rand(cuv+t*.01)-.2)*.15);
+    #endif
 
     return color;
 }
@@ -632,7 +633,8 @@ vec4 cinemaFilter(vec2 iuv, vec4 icolor)
 float sinRand(float x)
 {
     float y1 = abs((( sin(x+E)) + sin(x*E) )/2.0) * cos(x);
-    float y2 = float(mod( int(sin(float(mod( int(x), 11)))*7.0), 7.0))/7.0;
+    // float y2 = float(mod( int(sin(float(mod( int(x), 11.0)))*7.0), 7.0))/7.0;
+    float y2 = float(mod( floor(sin(float(mod( floor(x), 11.0)))*7.0), 7.0))/7.0;
     return y1*y2;
 }
 
@@ -759,7 +761,7 @@ vec4 showNotes(vec2 uvPixelPosition)
 
 
 vec4 showCylinder(vec2 uvPixelPosition, 
-                  CylinderType cylinderObject,
+                  const CylinderType cylinderObject,
                   int texturePlate,
                   int textureRound)
 {
